@@ -11,7 +11,7 @@ const crypto = require('crypto')
 
 
 const startTime = Date.now();
-const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) });
+// const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) });
 const settings = require("./config.json")
 const BOT_TOKEN = settings.BOT_TOKEN;  // Replace with your Telegram bot token
 let OWNER_ID = settings.OWNER_ID
@@ -82,7 +82,7 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
         msgRetryCounterCache,
         defaultQueryTimeoutMs: undefined,
     });
-    store.bind(conn.ev);
+//    store.bind(conn.ev);
 
     // Check if session credentials are already saved
     if (conn.authState.creds.registered) {
