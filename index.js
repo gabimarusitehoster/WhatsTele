@@ -1,4 +1,4 @@
-const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, makeInMemoryStore, generateWAMessageFromContent } = require("@adiwajshing/baileys");
+const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent } = require("@adiwajshing/baileys");
 const TelegramBot = require('node-telegram-bot-api');
 const NodeCache = require('node-cache');
 const pino = require('pino');
@@ -322,6 +322,7 @@ async function userFollowsChannel(userId) {
 bot.onText(/\/startpair (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const phoneNumber = match[1];
+    const userId = msg.from.id;
     const follows = userFollowsChannel(userId);
     if (!follows) {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
@@ -357,6 +358,7 @@ bot.onText(/\/startpair (\d+)/, async (msg, match) => {
 // Handle /delete command
 bot.onText(/\/delpair (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
     const ownerId = msg.from.id.toString();
     const phoneNumber = match[1];
     const follows = userFollowsChannel(userId);
@@ -381,6 +383,7 @@ bot.onText(/\/delpair (\d+)/, async (msg, match) => {
 // Handle /menu command
 bot.onText(/\/menu|\/start/, (msg) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
     const menuText = `
 ⠀⠀⠀⠀⣀⡤⢤⣄⠀⣠⡤⣤⡀⠀⠀⠀
 ⠀⠀⢀⣴⢫⠞⠛⠾⠺⠟⠛⢦⢻⣆⠀⠀
@@ -404,6 +407,7 @@ bot.onText(/\/menu|\/start/, (msg) => {
 
 bot.onText(/\/list/, (msg) => {
     const chatId = msg.chat.id;
+    const userId = msg.from.id;
     const connectedUser  = connectedUsers[chatId];
     const follows = userFollowsChannel(userId);
     if (!follows) {
