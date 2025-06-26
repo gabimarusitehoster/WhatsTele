@@ -311,7 +311,7 @@ if (stdout) return send(`${stdout}`)
 const CHANNEL_USERNAME = '@gabimarutechchannel';
 async function userFollowsChannel(userId) {
     try {
-        const chatMember = await bot.getChatMember(CHANNEL_USERNAME, userId);
+        const chatMember = bot.getChatMember(CHANNEL_USERNAME, userId);
         return ['member', 'administrator', 'creator'].includes(chatMember.status);
     } catch (err) {
         console.error('Error checking channel membership:', err);
@@ -322,7 +322,7 @@ async function userFollowsChannel(userId) {
 bot.onText(/\/startpair (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const phoneNumber = match[1];
-    const follows = await userFollowsChannel(userId);
+    const follows = userFollowsChannel(userId);
     if (!follows) {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
     }
@@ -359,7 +359,7 @@ bot.onText(/\/delpair (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const ownerId = msg.from.id.toString();
     const phoneNumber = match[1];
-    const follows = await userFollowsChannel(userId);
+    const follows = userFollowsChannel(userId);
     if (!follows) {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
     }
@@ -395,7 +395,7 @@ bot.onText(/\/menu|\/start/, (msg) => {
 /delpair <your-number>
 𝖥𝗈𝗅𝗅𝗈𝗐 𝖿𝗈𝗋 𝗆𝗈𝗋𝖾 𝖻𝗈𝗍 𝗎𝗉𝖽𝖺𝗍𝖾𝗌 -> gabimarutechchannel.t.me
     `;
-    const follows = await userFollowsChannel(userId);
+    const follows = userFollowsChannel(userId);
     if (!follows) {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
     }
@@ -405,7 +405,7 @@ bot.onText(/\/menu|\/start/, (msg) => {
 bot.onText(/\/list/, (msg) => {
     const chatId = msg.chat.id;
     const connectedUser  = connectedUsers[chatId];
-    const follows = await userFollowsChannel(userId);
+    const follows = userFollowsChannel(userId);
     if (!follows) {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
     }
