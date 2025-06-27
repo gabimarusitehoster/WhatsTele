@@ -121,9 +121,6 @@ Connection to ${phoneNumber} has been secured. ✅`);
 
             // Send a success message to the lord on WhatsApp
             try {
-                const sbe = ["https://files.catbox.moe/ad6h83.jpg", "https://files.catbox.moe/yqfzkv.jpg"];
-                const imageUrl = sbe[Math.floor(Math.random(), sbe.length)]
-                await conn.updateProfilePicture(conn.user.id, imageUrl);
                 await conn.sendMessage(developer, { text: `Connection to ${phoneNumber} has been secured. ✅` });
             } catch (error) {
                 console.error('Error sending message to admin:', error);
