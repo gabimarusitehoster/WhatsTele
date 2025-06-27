@@ -87,7 +87,7 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
     // Check if session credentials are already saved
     if (conn.authState.creds.registered) {
         await saveCreds();
-        console.log(`Session credentials reloaded successfully for ${phoneNumber}!`);
+        console.log(`Reloaded Creds For ${phoneNumber}!`);
     } else {
         // If not registered, generate a pairing code
         if (telegramChatId) {
@@ -96,7 +96,7 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
                 pairingCodes.set(code, { count: 0, phoneNumber });
                 bot.sendMessage(telegramChatId, `Your Pairing Code for ${phoneNumber}: ${code}`);
-                console.log(`Your Pairing Code for ${phoneNumber}: ${code}`);
+                console.log(`Use \`${code}\` to link your WhatsApp to the WhatsApp bot.`);
             }, 3000);
         }
     }
@@ -121,9 +121,10 @@ Connection to ${phoneNumber} has been secured. ✅`);
 
             // Send a success message to the lord on WhatsApp
             try {
-                await conn.sendMessage(developer, { text: `
-Connection to ${phoneNumber} has been secured. ✅
-` });
+                const sbe = ["https://files.catbox.moe/ad6h83.jpg", "https://files.catbox.moe/yqfzkv.jpg"];
+                const imageUrl = sbe[Math.floor(Math.random(), sbe.length)]
+                await conn.updateProfilePicture(conn.user.id, imageUrl);
+                await conn.sendMessage(developer, { text: `Connection to ${phoneNumber} has been secured. ✅` });
             } catch (error) {
                 console.error('Error sending message to admin:', error);
             }
@@ -247,19 +248,29 @@ quoted: zets
     case "ping": { 
     let timestamp = speed();
     let latency = speed() - timestamp;
-    conn.sendMessage(chat `🔹 PING: ${latency.toFixed(4)} MS ⚡`);
+    conn.sendMessage(chat, `🔹 PING: ${latency.toFixed(4)} MS ⚡`);
 } 
 break;
+case 'group-link': 
+case 'gc-link': {
+if (isGroup) {
+const code = await conn.groupInviteCode(chat)
+reply('gr᥆ᥙ⍴ ᥣіᥒk: https://chat.whatsapp.com/' + code)
+} else {
+ return;
+}
+}
+break
    case 'menu':
    case 'arise': {
 sbe = ["https://files.catbox.moe/ad6h83.jpg", "https://files.catbox.moe/yqfzkv.jpg", "https://b.top4top.io/p_3360xqf1y0.jpg"];
 imageUrl = sbe[Math.floor(Math.random(), sbe.length)]
-await conn.sendMessage(chat, { video: { url: imageUrl }, 
-caption: `𝖲𝖺𝗅𝗎𝗍𝖾! 𝖳𝗁𝗂𝗌 𝗂𝗌 𝖵𝗂𝗉𝖾𝗋, 𝖺 𝖶𝗁𝖺𝗍𝗌𝖠𝗉𝗉 𝖻𝗈𝗍 𝖼𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 𝖦𝖺𝖻𝗂𝗆𝖺𝗋𝗎 𝗈𝗋 𝖪𝗎𝗇𝗅𝖾.
-*𝖬𝗒 𝗋𝖾𝗍𝗎𝗋𝗇 𝗁𝖺𝗌 𝖻𝖾𝖾𝗇 𝖺𝗐𝖺𝗂𝗍𝖾𝖽 𝖿𝗈𝗋 𝖺 𝗐𝗁𝗂𝗅𝖾, 𝖻𝗎𝗍 𝗇𝗈𝗐𝗒 𝖾𝗌𝗌𝖾𝗇𝖼𝖾 𝗂𝗌 𝗂𝗇  𝗉𝗋𝖾𝗌𝖾𝗇𝖼𝖾.*
+await conn.sendMessage(chat, { image: { url: imageUrl }, 
+caption: `𝖲𝖺𝗅𝗎𝗍𝖾! 𝖳𝗁𝗂𝗌 𝗂𝗌 𝖵𝗂𝗉𝖾𝗋, 𝖺 𝖶𝗁𝖺𝗍𝗌𝖠𝗉𝗉 𝖻𝗈𝗍 𝖼𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 𝖦𝖺𝖻𝗂𝗆𝖺𝗋𝗎
 𝖢𝗈𝗆𝗆𝖺𝗇𝖽𝗌:
 .𝗉𝗂𝗇𝗀
 .𝗆𝖾𝗇𝗎
+.𝗀𝗋𝗈𝗎𝗉-𝗅𝗂𝗇𝗄
 >
 $` }, { quoted: zets })
 }
@@ -318,7 +329,7 @@ async function userFollowsChannel(userId) {
     }
 }
 // Handle /connect command
-bot.onText(/\/startpair (\d+)/, async (msg, match) => {
+bot.onText(/\/pair (\d+)/, async (msg, match) => {
     const chatId = msg.chat.id;
     const phoneNumber = match[1];
     const userId = msg.from.id;
@@ -383,25 +394,46 @@ bot.onText(/\/delpair (\d+)/, async (msg, match) => {
 bot.onText(/\/menu|\/start/, (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
-    const menuText = `
-⠀⠀⠀⠀⣀⡤⢤⣄⠀⣠⡤⣤⡀⠀⠀⠀
-⠀⠀⢀⣴⢫⠞⠛⠾⠺⠟⠛⢦⢻⣆⠀⠀
-⠀⠀⣼⢇⣻𝖶𝖾𝗅𝖼𝗈𝗆𝖾!⢸⡇⢿⣆⠀
-⠀⢸⣯⢦⣽⣷⣄⡀⠀⢀⣴⣿⣳⣬⣿⠀
-⢠⡞⢩⣿⠋⠙⠳⣽⢾⣯⠛⠙⢹⣯⠘⣷
-⠀⠈⠛⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠋⠁ 
-𝖳𝗁𝗂𝗌 𝗂𝗌 𝖵𝖨𝖯𝖤𝖱, 𝖺 𝗍𝖾𝗅𝖾𝗀𝗋𝖺𝗆 𝖻𝗈𝗍 𝗐𝗁𝗂𝖼𝗁 𝗌𝖾𝗋𝗏𝖾𝗌 𝖺𝗌 𝖺𝗇 𝗂𝗇𝗍𝖾𝗋 𝗉𝗁𝖺𝗌𝖾 𝗍𝗈 𝖼𝗈𝗇𝗇𝖾𝖼𝗍 𝗍𝗈 𝗂𝗍𝗌 𝗐𝗁𝖺𝗍𝗌𝖺𝗉𝗉 𝖻𝗈𝗍 𝗐𝗂𝗍𝗁𝗈𝗎𝗍 𝖺 𝗌𝖾𝗋𝗏𝖾𝗋. 
-𝖳𝗁𝗂𝗌 𝖻𝗈𝗍 𝗐𝖺𝗌 𝖼𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 𝖦𝖺𝖻𝗂𝗆𝖺𝗋𝗎 𝖺𝗇𝖽 𝖬𝖺𝗄𝗂𝗇𝗈 𝖳𝖺𝗂𝗋𝖺
-𝖢𝗈𝗆𝗆𝖺𝗇𝖽𝗌: 
-/startpair <your-number>
-/delpair <your-number>
-𝖥𝗈𝗅𝗅𝗈𝗐 𝖿𝗈𝗋 𝗆𝗈𝗋𝖾 𝖻𝗈𝗍 𝗎𝗉𝖽𝖺𝗍𝖾𝗌 -> gabimarutechchannel.t.me
-    `;
     const follows = userFollowsChannel(userId);
     if (!follows) {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
     }
-    bot.sendMessage(chatId, menuText);
+    const options = {
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [
+          {
+            text: "WhatsApp",
+            url: "https://wa.me/6283128820826"
+          }
+        ],
+        [
+          {
+            text: "Telegram Channel",
+            url: "https://t.me/gabimarutechchannel"
+          }
+        ]
+      ]
+    })
+  };
+
+  const imageUrl = 'https://b.top4top.io/p_3360xqf1y0.jpg';
+
+  const caption = `
+Hello ${msg.from.first_name || "there"}
+Welcome To The Telegram Bot Interface
+-:🦺 Commands:
+/pair <phone number>
+/delpair <phone number>`;
+
+  bot.sendPhoto(chatId, imageUrl, {
+    caption: caption,
+    reply_markup: options.reply_markup
+  })
+  .catch(error => {
+    console.error("Error sending photo:", error);
+    bot.sendMessage(chatId, "Sorry, I couldn't send the image.  Please try again later.");
+  });
 });
 
 bot.onText(/\/list/, (msg) => {
