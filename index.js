@@ -247,12 +247,11 @@ quoted: zets
     case "ping": { 
     let timestamp = speed();
     let latency = speed() - timestamp;
-    xreply(`🔹 PING: ${latency.toFixed(4)} MS ⚡`);
+    conn.sendMessage(chat `🔹 PING: ${latency.toFixed(4)} MS ⚡`);
 } 
 break;
    case 'menu':
    case 'arise': {
-if (!isCreator) return reply("Owner Only")
 sbe = ["https://files.catbox.moe/ad6h83.jpg", "https://files.catbox.moe/yqfzkv.jpg", "https://b.top4top.io/p_3360xqf1y0.jpg"];
 imageUrl = sbe[Math.floor(Math.random(), sbe.length)]
 await conn.sendMessage(chat, { video: { url: imageUrl }, 
