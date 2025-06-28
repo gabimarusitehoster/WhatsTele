@@ -58,7 +58,7 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
     const sessionPath = path.join(__dirname, 'tmp', `session_${phoneNumber}`);
 
     if (!fs.existsSync(sessionPath)) {
-        console.log(`Session directory does not exist for ${phoneNumber}.`);
+        console.log(`Session not found for ${phoneNumber}.`);
         return;
     }
 
@@ -95,7 +95,23 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
                 let code = await conn.requestPairingCode(phoneNumber, custom);
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
                 pairingCodes.set(code, { count: 0, phoneNumber });
-                bot.sendMessage(telegramChatId, `Use \`${code}\` to link your WhatsApp to the WhatsApp bot.`);
+                const pairText = `
+PAIRING CODE -> \`${code}\`
+
+🔗 **Instructions:**
+1. 🧭 Open *WhatsApp* on your phone.
+2. 📲 Tap the **three dots** (menu) in the top right corner.
+3. 💻 Select **Linked Devices**.
+4. ➕ Tap on **Link a Device**.
+5. 🔤 You'll see a prompt to scan a QR — instead, *tap the "Link with phone number instead"* option.
+7. 🧩 Enter the pairing code you received: **${code}**
+8. ✅ Done! Your WhatsApp is now linked to the bot.
+
+If you need a new code, \`/delpair <number>\` then request one again!
+
+_— Powered by Gabimaru Bot 🐉_
+`;
+                bot.sendMessage(telegramChatId, pairText, { parse_mode: 'Markdown' });
                 console.log(`Use \`${code}\` to link your WhatsApp to the WhatsApp bot.`);
             }, 3000);
         }
@@ -134,141 +150,142 @@ Connection to ${phoneNumber} has been secured. ✅`);
     conn.ev.on('creds.update', saveCreds);
 
 conn.ev.on('messages.upsert', async ({ messages, type }) => {
-    try {
-        if (type !== 'notify' || !messages || !messages[0]) return;
+  try {
+    if (type !== 'notify' || !messages?.length) return;
 
-        const msg = messages[0];
-        if (!msg.message || msg.key.remoteJid === 'status@broadcast') return;
+    const msg = messages[0];
+    if (!msg.message || msg.key.remoteJid === 'status@broadcast') return;
 
-        const fromMe = msg.key.fromMe;
-        if (!conn.public && !fromMe) return;
+    const fromMe = msg.key.fromMe;
+    if (!conn.public && !fromMe) return;
 
-        msg.message = msg.message?.ephemeralMessage?.message || msg.message;
-        const m = smsg(JSON.parse(JSON.stringify(msg)), conn);
-        const typeMsg = getContentType(msg.message);
-        const chat = msg.key.remoteJid;
-        const isGroup = chat.endsWith('@g.us');
+    msg.message = msg.message?.ephemeralMessage?.message || msg.message;
+    const m = smsg(JSON.parse(JSON.stringify(msg)), conn);
+    const chat = msg.key.remoteJid;
+    const isGroup = chat.endsWith('@g.us');
+    const user = m.sender;
+    const pushname = m.pushName || 'Unknown';
 
-        const body = (
-            typeMsg === 'conversation' ? msg.message.conversation :
-            typeMsg === 'imageMessage' ? msg.message.imageMessage.caption :
-            typeMsg === 'videoMessage' ? msg.message.videoMessage.caption :
-            typeMsg === 'extendedTextMessage' ? msg.message.extendedTextMessage.text :
-            typeMsg === 'buttonsResponseMessage' ? msg.message.buttonsResponseMessage.selectedButtonId :
-            typeMsg === 'listResponseMessage' ? msg.message.listResponseMessage.singleSelectReply.selectedRowId :
-            ''
-        ) || '';
+    // Ensure commands work in group chats
+    const text = (m.text || '').trim();
+    const prefix = settings.prefix || '.';
+    if (!text.startsWith(prefix)) return;
+    const [cmd, ...args] = text.slice(prefix.length).split(/\s+/);
+    const command = cmd.toLowerCase();
+    const q = args.join(' ');
 
-        const prefix = settings.prefix || '.';
-        const isCmd = body.startsWith(prefix);
-        const command = isCmd ? body.slice(prefix.length).trim().split(' ')[0].toLowerCase() : '';
-        const args = body.trim().split(/\s+/).slice(1);
-        const q = args.join(' ');
+    // Load metadata and permissions
+    const botNum = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+    const ownerList = JSON.parse(fs.readFileSync('./developers.json'));
+    const isCreator = [botNum, ...ownerList.map(n => n.replace(/\D/g, '') + '@s.whatsapp.net')].includes(user);
 
-        const sender = msg.key.fromMe ? conn.user.id : (msg.key.participant || msg.key.remoteJid);
-        const senderNumber = sender.split('@')[0];
-        const botNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net';
-        const pushname = msg.pushName || 'Unknown';
-
-        console.log(
-            chalk.greenBright('📩 New Message:'),
-            chalk.cyan(`${pushname} (${senderNumber})`),
-            chalk.yellow(isGroup ? `[GROUP: ${chat.split('@')[0]}]` : `[PRIVATE]`),
-            chalk.magentaBright(isCmd ? `>> ${command}` : `>> ${body.slice(0, 30)}...`)
-        );
-
-        // Load owner list
-        const ownerList = JSON.parse(fs.readFileSync('./developers.json'));
-        const isCreator = [botNumber, ...ownerList.map(n => `${n.replace(/\D/g, '')}@s.whatsapp.net`)].includes(sender);
-
-        // Group metadata
-        let groupMetadata = {}, groupAdmins = [];
-        if (isGroup) {
-            groupMetadata = await conn.groupMetadata(chat).catch(() => ({}));
-            groupAdmins = groupMetadata.participants?.filter(p => p.admin).map(p => p.id) || [];
-        }
-        const isAdmin = groupAdmins.includes(sender);
-        const isBotAdmin = groupAdmins.includes(botNumber);
-
-        // Helper
-        const send = async (text) => conn.sendMessage(chat, { text });
-        const xreply = async (text) => conn.sendMessage(chat, {
-            text,
-            contextInfo: {
-                mentionedJid: [sender],
-                externalAdReply: {
-                    title: "Viper WhatsApp Bot",
-                    body: pushname,
-                    mediaUrl: "https://t.me/lonelydeveloper",
-                    sourceUrl: "https://t.me/gabimarutechchannel",
-                    thumbnailUrl: "https://files.catbox.moe/57maks.jpg",
-                    showAdAttribution: false
-                }
-            }
-        });
-
-        // Commands
-        if (isCmd) {
-            switch (command) {
-                case 'ping': {
-                    const start = speed();
-                    const end = speed();
-                    return send(`🏓 PONG: ${Math.floor(end - start)}ms`);
-                }
-
-                case 'menu': {
-                    const image = "https://files.catbox.moe/yqfzkv.jpg";
-                    return conn.sendMessage(chat, {
-                        image: { url: image },
-                        caption: `✨ *Viper WhatsApp Bot*\n\nAvailable commands:\n• .ping\n• .menu\n• .group-link\n• .say [text]`
-                    });
-                }
-
-                case 'group-link':
-                case 'gclink': {
-                    if (!isGroup) return send("❌ This command is only for groups.");
-                    const code = await conn.groupInviteCode(chat);
-                    return send(`🔗 Group Link:\nhttps://chat.whatsapp.com/${code}`);
-                }
-
-                case 'say': {
-                    if (!q) return send("❌ Please provide a message.");
-                    return send(q);
-                }
-            }
-        }
-
-        // Owner eval
-        if (isCreator && body.startsWith('=>')) {
-            try {
-                const result = await eval(`(async () => { return ${body.slice(3)} })()`);
-                return send(util.format(result));
-            } catch (e) {
-                return send(String(e));
-            }
-        }
-
-        if (isCreator && body.startsWith('>')) {
-            try {
-                let evaled = await eval(body.slice(2));
-                if (typeof evaled !== 'string') evaled = util.inspect(evaled);
-                return send(evaled);
-            } catch (err) {
-                return send(String(err));
-            }
-        }
-
-        if (isCreator && body.startsWith('$')) {
-            exec(body.slice(2), (err, stdout, stderr) => {
-                if (err) return send(err.message);
-                if (stdout) return send(stdout);
-                if (stderr) return send(stderr);
-            });
-        }
-
-    } catch (err) {
-        console.error(chalk.redBright('❌ Error in messages.upsert:'), err);
+    let isAdmin = false, isBotAdmin = false;
+    if (isGroup) {
+      const g = await conn.groupMetadata(chat).catch(() => ({}));
+      const admins = g.participants?.filter(p => p.admin).map(p => p.id) || [];
+      isAdmin = admins.includes(user);
+      isBotAdmin = admins.includes(botNum);
     }
+
+    // Logging
+    console.log(`📥 [${isGroup ? 'GROUP' : 'DM'}] ${pushname} (${user.split('@')[0]}):`, command, args);
+
+    const send = (text) => conn.sendMessage(chat, { text });
+    const richReply = text => conn.sendMessage(chat, {
+      text,
+      contextInfo: {
+        externalAdReply: {
+          title: 'Viper Bot',
+          body: pushname,
+          thumbnailUrl: 'https://files.catbox.moe/57maks.jpg',
+        }
+      }
+    });
+
+    if (isGroup && isBotAdmin) {
+      switch (command) {
+        case 'kick':
+          if (!isAdmin && !isCreator) return send('❌ Only an admin can kick!');
+          if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid) {
+            const targets = msg.message.extendedTextMessage.contextInfo.mentionedJid;
+            await conn.groupParticipantsUpdate(chat, targets, 'remove');
+            return send(`✅ Removed: ${targets.map(t => t.split('@')[0]).join(', ')}`);
+          }
+          return send('❌ Please mention someone to kick.');
+        case 'promote':
+        case 'demote':
+          if (!isAdmin && !isCreator) return send('❌ Admins only.');
+          if (!isBotAdmin) return send('❌ I need admin permission to do that.');
+          if (msg.message.extendedTextMessage?.contextInfo?.mentionedJid) {
+            const target = msg.message.extendedTextMessage.contextInfo.mentionedJid;
+            const action = command === 'promote' ? 'promote' : 'demote';
+            await conn.groupParticipantsUpdate(chat, target, action);
+            return send(`✅ ${action === 'promote' ? 'Promoted' : 'Demoted'}: ${target}`);
+          }
+          return send('❌ Please mention someone to promote/demote.');
+      }
+    }
+
+    const settingKey = `_${chat}_settings.json`;
+    let gset = fs.existsSync(settingKey) ? JSON.parse(fs.readFileSync(settingKey)) : {
+      welcome: true, goodbye: true, link: true
+    };
+    const toggle = (k, val) => {
+      gset[k] = val;
+      fs.writeFileSync(settingKey, JSON.stringify(gset));
+    };
+
+    switch (command) {
+      case 'welcome':
+      case 'bye':
+      case 'link':
+        if (!isAdmin && !isCreator) return send('❌ Admins only.');
+        if (!['on','off'].includes(args[0])) return send('Usage: .welcome on/off');
+        toggle(command === 'welcome' ? 'welcome' : command === 'bye' ? 'goodbye' : 'link', args[0] === 'on');
+        return send(`✅ ${command.charAt(0).toUpperCase()+command.slice(1)} turned ${args[0]}`);
+    }
+
+    switch (command) {
+      case 'ping': return send(`🏓 Pong!`);
+      case 'menu': return richReply(`📜 Commands:\n• .ping\n• .kick @user\n• .promote @user\n• .welcome on/off\n• .bye on/off\n• .link on/off`);
+      case 'link':
+        if (!isGroup) return send('❌ Only groups have links.');
+        if (!gset.link) return send('❌ Group link feature disabled.');
+        const code = await conn.groupInviteCode(chat);
+        return send(`🔗 https://chat.whatsapp.com/${code}`);
+    }
+    if (isCreator) {
+      switch (command) {
+        case 'broadcast':
+          // broadcast to all chats
+          const allChats = Object.keys(conn.chats);
+          for (let c of allChats) conn.sendMessage(c, { text: q });
+          return send('✅ Broadcast done.');
+      }
+    }
+
+  } catch (e) {
+    console.error('❌ Error in handler:', e);
+  }
+});
+
+conn.ev.on('group-participants.update', async ({ id, participants, action }) => {
+  const isGroup = id.endsWith('@g.us');
+  if (!isGroup) return;
+
+  const settingKey = `_${id}_settings.json`;
+  if (!fs.existsSync(settingKey)) return;
+  const gset = JSON.parse(fs.readFileSync(settingKey));
+
+  for (const p of participants) {
+    if (action === 'add' && gset.welcome) {
+      const name = (await conn.onWhatsApp(p)).find(u=>u.jid===p)?.notify || p.split('@')[0];
+      await conn.sendMessage(id, { text: `👋 Welcome @${name}!`, contextInfo: { mentionedJid: [p] } });
+    }
+    if (action === 'remove' && gset.goodbye) {
+      await conn.sendMessage(id, { text: `😢 @${p.split('@')[0]} has left the group.`, contextInfo: { mentionedJid: [p] } });
+    }
+  }
 });
 }
 const CHANNEL_USERNAME = '@gabimarutechchannel';
@@ -329,9 +346,11 @@ bot.onText(/\/delpair (\d+)/, async (msg, match) => {
         return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
     }
     const sessionPath = path.join(__dirname, 'tmp', `session_${phoneNumber}`);
+    /*
     if (ownerId !== OWNER_ID) {
         return bot.sendMessage(chatId, '❌ You are not authorized to use this command.');
     }
+    */
     // Check if the session directory exists
     if (fs.existsSync(sessionPath)) {
            fs.rmSync(sessionPath, { recursive: true, force: true });
@@ -375,9 +394,10 @@ bot.onText(/\/menu|\/start/, (msg) => {
   const caption = `
 Hello ${msg.from.first_name || "there"}
 Welcome To The Telegram Bot Interface
--:🦺 Commands:
 /pair <phone number>
-/delpair <phone number>`;
+/delpair <phone number>
+
+Creator -> ayokunledavid.t.me`;
 
   bot.sendPhoto(chatId, imageUrl, {
     caption: caption,
