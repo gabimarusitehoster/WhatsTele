@@ -4,7 +4,8 @@
   "description": "WhatsApp Telebot",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "npm install @fizzxydev/baileys-pro"
   },
   "author": "AyoKunle",
   "license": "MIT",

