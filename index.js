@@ -461,8 +461,13 @@ loadAllSessions().catch(err => {
     console.log('Error loading sessions:', err);
 });
 
-// Start the bot
-console.log('Telegram bot is running...');
+// Start the bor
+        console.table({
+            "Bot Name": "WhatsTele Bot",
+            "Link": `https://t.me/gabimarutechchannel`,
+            "Author": "https://t.me/ayokunledavid"
+})
+console.log('Telegram bot imstace has started...');
 
 
 let file = require.resolve(__filename)
