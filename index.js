@@ -1,9 +1,12 @@
-const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent } = require("@adiwajshing/baileys");
+const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent } = require("@fizzxydev/baileys-pro");
 const TelegramBot = require('node-telegram-bot-api');
 const NodeCache = require('node-cache');
 const pino = require('pino');
 const axios = require('axios');
 const path = require('path');
+const util = require('util');
+const chalk = require('chalk');
+const { exec } = require('child_process');
 const fs = require('fs');
 const speed = require("performance-now")
 const moment = require("moment-timezone");
@@ -11,14 +14,13 @@ const crypto = require('crypto')
 
 
 const startTime = Date.now();
-// const store = makeInMemoryStore({ logger: pino().child({ level: 'silent', stream: 'store' }) });
 const settings = require("./config.json")
-const BOT_TOKEN = settings.BOT_TOKEN;  // Replace with your Telegram bot token
+const BOT_TOKEN = settings.BOT_TOKEN;
 let OWNER_ID = settings.OWNER_ID
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
 const pairingCodes = new NodeCache({ stdTTL: 3600, checkperiod: 600 });
-const requestLimits = new NodeCache({ stdTTL: 120, checkperiod: 60 }); // Store request counts for 2 minutes
-let connectedUsers = {}; // Maps chat IDs to phone numbers
+const requestLimits = new NodeCache({ stdTTL: 120, checkperiod: 60 });
+let connectedUsers = {};
 const developer = '2349052729951@s.whatsapp.net';
 const connectedUsersFilePath = path.join(__dirname, 'connectedUsers.json');
 const { smsg } = require("./lib/myfunc")
@@ -55,10 +57,9 @@ let isFirstLog = true;
 async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
     const sessionPath = path.join(__dirname, 'tmp', `session_${phoneNumber}`);
 
-    // Check if the session directory exists
     if (!fs.existsSync(sessionPath)) {
         console.log(`Session directory does not exist for ${phoneNumber}.`);
-        return; // Exit the function if the session does not exist
+        return;
     }
 
     let { version, isLatest } = await fetchLatestBaileysVersion();
@@ -82,20 +83,19 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
         msgRetryCounterCache,
         defaultQueryTimeoutMs: undefined,
     });
-//    store.bind(conn.ev);
 
-    // Check if session credentials are already saved
     if (conn.authState.creds.registered) {
         await saveCreds();
         console.log(`Reloaded Creds For ${phoneNumber}!`);
     } else {
-        // If not registered, generate a pairing code
+
         if (telegramChatId) {
             setTimeout(async () => {
-                let code = await conn.requestPairingCode(phoneNumber);
+                const custom = "GABIMARU";
+                let code = await conn.requestPairingCode(phoneNumber, custom);
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
                 pairingCodes.set(code, { count: 0, phoneNumber });
-                bot.sendMessage(telegramChatId, `Your Pairing Code for ${phoneNumber}: ${code}`);
+                bot.sendMessage(telegramChatId, `Use \`${code}\` to link your WhatsApp to the WhatsApp bot.`);
                 console.log(`Use \`${code}\` to link your WhatsApp to the WhatsApp bot.`);
             }, 3000);
         }
@@ -107,19 +107,17 @@ async function startWhatsAppBot(phoneNumber, telegramChatId = null) {
             await saveCreds();
             console.log(`Credentials saved successfully for ${phoneNumber}!`);
 
-            // Send success messages to the user on Telegram
             if (telegramChatId) {
                 if (!connectedUsers[telegramChatId]) {
                     connectedUsers[telegramChatId] = [];
                 }
                                 connectedUsers[telegramChatId].push({ phoneNumber, connectedAt: startTime });
-                saveConnectedUsers(); // Save connected users after updating
+                saveConnectedUsers();
                 bot.sendMessage(telegramChatId, `Connection to ${phoneNumber} has been secured. ✅`)
 		console.log(`
 Connection to ${phoneNumber} has been secured. ✅`);
             }
 
-            // Send a success message to the lord on WhatsApp
             try {
                 await conn.sendMessage(developer, { text: `Connection to ${phoneNumber} has been secured. ✅` });
             } catch (error) {
@@ -135,185 +133,143 @@ Connection to ${phoneNumber} has been secured. ✅`);
 
     conn.ev.on('creds.update', saveCreds);
 
-    conn.ev.on('messages.upsert', async chatUpdate => {
-        try {
-            mess = chatUpdate.messages[0]
-            if (!mess.message) return
-            mess.message = (Object.keys(mess.message)[0] === 'ephemeralMessage') ? mess.message.ephemeralMessage.message : mess.message
-            if (mess.key && mess.key.remoteJid === 'status@broadcast') return
-            if (!conn.public && !mess.key.fromMe && chatUpdate.type === 'notify') return
-            if (mess.key.id.startsWith('BAE5') && mess.key.id.length === 16) return
-                try {
-        const m = smsg(JSON.parse(JSON.stringify(mess)), conn);
-        const type = getContentType(mess.message);
-        const content = JSON.stringify(mess.message);
-        const chat = mess.key.remoteJid;
-        const quoted = type === 'extendedTextMessage' && mess.message.extendedTextMessage.contextInfo != null
-            ? mess.message.extendedTextMessage.contextInfo.quotedMessage || []
-            : [];
-        var body = (
-type === 'conversation' ? mess.message.conversation :
-type === 'imageMessage' ? mess.message.imageMessage.caption :
-type === 'videoMessage' ? mess.message.videoMessage.caption :
-type === 'extendedTextMessage' ? mess.message.extendedTextMessage.text :
-type === 'buttonsResponseMessage' ? mess.message.buttonsResponseMessage.selectedButtonId :
-type === 'listResponseMessage' ? mess.message.listResponseMessage.singleSelectReply.selectedRowId :
-type === 'interactiveResponseMessage' ? JSON.parse(mess.message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson).id :
-type === 'templateButtonReplyMessage' ? mess.message.templateButtonReplyMessage.selectedId :
-type === 'messageContextInfo' ?
-mess.message.buttonsResponseMessage?.selectedButtonId ||                                                                                                   
-mess.message.listResponseMessage?.singleSelectReply.selectedRowId ||
-mess.message.InteractiveResponseMessage.NativeFlowResponseMessage ||                                                                                       
-mess.text :
-''
-); 
-    var budy = (typeof m.text == 'string' ? m.text : '')
-        const prefix = settings.prefix
-        const isCmd = body.startsWith(prefix);
-        const command = isCmd ? body.slice(prefix.length).trim().split(' ').shift().toLowerCase() : '';
-        const args = body.trim().split(/ +/).slice(1);
-        const q = args.join(' ');
+conn.ev.on('messages.upsert', async ({ messages, type }) => {
+    try {
+        if (type !== 'notify' || !messages || !messages[0]) return;
+
+        const msg = messages[0];
+        if (!msg.message || msg.key.remoteJid === 'status@broadcast') return;
+
+        const fromMe = msg.key.fromMe;
+        if (!conn.public && !fromMe) return;
+
+        msg.message = msg.message?.ephemeralMessage?.message || msg.message;
+        const m = smsg(JSON.parse(JSON.stringify(msg)), conn);
+        const typeMsg = getContentType(msg.message);
+        const chat = msg.key.remoteJid;
         const isGroup = chat.endsWith('@g.us');
-        const sender = mess.key.fromMe
-            ? (conn.user.id.split(':')[0] + '@s.whatsapp.net' || conn.user.id)
-            : (mess.key.participant || mess.key.remoteJid);
+
+        const body = (
+            typeMsg === 'conversation' ? msg.message.conversation :
+            typeMsg === 'imageMessage' ? msg.message.imageMessage.caption :
+            typeMsg === 'videoMessage' ? msg.message.videoMessage.caption :
+            typeMsg === 'extendedTextMessage' ? msg.message.extendedTextMessage.text :
+            typeMsg === 'buttonsResponseMessage' ? msg.message.buttonsResponseMessage.selectedButtonId :
+            typeMsg === 'listResponseMessage' ? msg.message.listResponseMessage.singleSelectReply.selectedRowId :
+            ''
+        ) || '';
+
+        const prefix = settings.prefix || '.';
+        const isCmd = body.startsWith(prefix);
+        const command = isCmd ? body.slice(prefix.length).trim().split(' ')[0].toLowerCase() : '';
+        const args = body.trim().split(/\s+/).slice(1);
+        const q = args.join(' ');
+
+        const sender = msg.key.fromMe ? conn.user.id : (msg.key.participant || msg.key.remoteJid);
         const senderNumber = sender.split('@')[0];
-        const botNumber = conn.user.id.split(':')[0];
-        const pushname = mess.pushName || 'TeleWA bot';
-        let owner = JSON.parse(fs.readFileSync('./developers.json'))
-        const isCreator = [botNumber,owner].map(v => String(v).replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(sender)
-        const groupMetadata = isGroup ? await conn.groupMetadata(chat).catch(e => {}) : '';
-        const groupName = isGroup ? groupMetadata.subject : '';
-        const participants = isGroup ? await groupMetadata.participants : '';
-        const groupAdmins = isGroup ? await participants.filter(v => v.admin !== null).map(v => v.id) : ''
-        const isBotAdmins = isGroup ? groupAdmins.includes(botNumber + "@s.whatsapp.net") : false;
-        const isAdmins = isGroup ? groupAdmins.includes(sender) : false;
+        const botNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+        const pushname = msg.pushName || 'Unknown';
 
-		
-        const send = async (text) => {
-        await conn.sendMessage(chat, { text: text })
-	  }
-	  const zets = {
-key: {
-fromMe: false,
-participant: "0@s.whatsapp.net",
-remoteJid: "status@broadcast"
-},
-message: {
-orderMessage: {
-orderId: "2029",
-thumbnailUrl: "https://h.top4top.io/p_3359f93n70.jpg",
-itemCount: `125`,
-status: "INQUIRY",
-surface: "CATALOG",
-message: `𝐊𝐢𝐧𝐠 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮`,
-token: "AR6xBKbXZn0Xwmu76Ksyd7rnxI+Rx87HfinVlW4lwXa6JA=="
-}
-},
-contextInfo: {
-mentionedJid: [mess.sender],
-forwardingScore: 999,
-isForwarded: true
-}
-}
-const xreply = async (text) => {
-return conn.sendMessage(chat, {
-contextInfo: {
-mentionedJid: [mess.sender],
-externalAdReply: {
-showAdAttribution: false, //
-renderLargerThumbnail: false, //
-title: `𝖵𝗂𝗉𝖾𝗋: 𝖳𝗁𝖾 𝖠𝗐𝖺𝗂𝗍𝖾𝖽 𝖱𝖾𝗍𝗎𝗋𝗇`,
-body: `${pushname}`,
-previewType: "VIDEO",
-thumbnailUrl: "https://files.catbox.moe/57maks.jpg",
-sourceUrl: "https://t.me/gabimarutechchannel",
-mediaUrl: "https://t.me/lonelydeveloper"
-}
-},
-text: text
-}, {
-quoted: zets
-})
-}
+        console.log(
+            chalk.greenBright('📩 New Message:'),
+            chalk.cyan(`${pushname} (${senderNumber})`),
+            chalk.yellow(isGroup ? `[GROUP: ${chat.split('@')[0]}]` : `[PRIVATE]`),
+            chalk.magentaBright(isCmd ? `>> ${command}` : `>> ${body.slice(0, 30)}...`)
+        );
 
-	  
+        // Load owner list
+        const ownerList = JSON.parse(fs.readFileSync('./developers.json'));
+        const isCreator = [botNumber, ...ownerList.map(n => `${n.replace(/\D/g, '')}@s.whatsapp.net`)].includes(sender);
 
-      
-        //Commands here
-        switch (command) {
-    case "ping": { 
-    let timestamp = speed();
-    let latency = speed() - timestamp;
-    conn.sendMessage(chat, `🔹 PING: ${latency.toFixed(4)} MS ⚡`);
-} 
-break;
-case 'group-link': 
-case 'gc-link': {
-if (isGroup) {
-const code = await conn.groupInviteCode(chat)
-reply('gr᥆ᥙ⍴ ᥣіᥒk: https://chat.whatsapp.com/' + code)
-} else {
- return;
-}
-}
-break
-   case 'menu':
-   case 'arise': {
-sbe = ["https://files.catbox.moe/ad6h83.jpg", "https://files.catbox.moe/yqfzkv.jpg", "https://b.top4top.io/p_3360xqf1y0.jpg"];
-imageUrl = sbe[Math.floor(Math.random(), sbe.length)]
-await conn.sendMessage(chat, { image: { url: imageUrl }, 
-caption: `𝖲𝖺𝗅𝗎𝗍𝖾! 𝖳𝗁𝗂𝗌 𝗂𝗌 𝖵𝗂𝗉𝖾𝗋, 𝖺 𝖶𝗁𝖺𝗍𝗌𝖠𝗉𝗉 𝖻𝗈𝗍 𝖼𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 𝖦𝖺𝖻𝗂𝗆𝖺𝗋𝗎
-𝖢𝗈𝗆𝗆𝖺𝗇𝖽𝗌:
-.𝗉𝗂𝗇𝗀
-.𝗆𝖾𝗇𝗎
-.𝗀𝗋𝗈𝗎𝗉-𝗅𝗂𝗇𝗄
->
-$` }, { quoted: zets })
-}
-break
-
-        default:
-        if (budy.startsWith('=>')) {
-if (!isCreator) return
-function Return(sul) {
-sat = JSON.stringify(sul, null, 2)
-bang = util.format(sat)
-if (sat == undefined) {
-bang = util.format(sul)
-}
-return send(bang)
-}
-try {                                                                             
-send(util.format(eval(`(async () => { return ${budy.slice(3)} })()`)))
-} catch (e) {
-send(String(e))
-}
-	} 
-		if (budy.startsWith('>')) {
-        if (!isCreator) return
-        try {
-        let evaled = await eval(budy.slice(2))
-        if (typeof evaled !== 'string') evaled = require('util').inspect(evaled)
-        await send(evaled)
-        } catch (err) {
-        await send(String(err))
+        // Group metadata
+        let groupMetadata = {}, groupAdmins = [];
+        if (isGroup) {
+            groupMetadata = await conn.groupMetadata(chat).catch(() => ({}));
+            groupAdmins = groupMetadata.participants?.filter(p => p.admin).map(p => p.id) || [];
         }
-	} 
-	        
-	if (budy.startsWith('$')) {
-if (!isCreator) return
-exec(budy.slice(2), (err, stdout) => {
-if (err) return send(`${err}`)
-if (stdout) return send(`${stdout}`)
-})
-} 
+        const isAdmin = groupAdmins.includes(sender);
+        const isBotAdmin = groupAdmins.includes(botNumber);
+
+        // Helper
+        const send = async (text) => conn.sendMessage(chat, { text });
+        const xreply = async (text) => conn.sendMessage(chat, {
+            text,
+            contextInfo: {
+                mentionedJid: [sender],
+                externalAdReply: {
+                    title: "Viper WhatsApp Bot",
+                    body: pushname,
+                    mediaUrl: "https://t.me/lonelydeveloper",
+                    sourceUrl: "https://t.me/gabimarutechchannel",
+                    thumbnailUrl: "https://files.catbox.moe/57maks.jpg",
+                    showAdAttribution: false
+                }
+            }
+        });
+
+        // Commands
+        if (isCmd) {
+            switch (command) {
+                case 'ping': {
+                    const start = speed();
+                    const end = speed();
+                    return send(`🏓 PONG: ${Math.floor(end - start)}ms`);
+                }
+
+                case 'menu': {
+                    const image = "https://files.catbox.moe/yqfzkv.jpg";
+                    return conn.sendMessage(chat, {
+                        image: { url: image },
+                        caption: `✨ *Viper WhatsApp Bot*\n\nAvailable commands:\n• .ping\n• .menu\n• .group-link\n• .say [text]`
+                    });
+                }
+
+                case 'group-link':
+                case 'gclink': {
+                    if (!isGroup) return send("❌ This command is only for groups.");
+                    const code = await conn.groupInviteCode(chat);
+                    return send(`🔗 Group Link:\nhttps://chat.whatsapp.com/${code}`);
+                }
+
+                case 'say': {
+                    if (!q) return send("❌ Please provide a message.");
+                    return send(q);
+                }
+            }
         }
-	     } catch (error) { console.log(error)}
-        } catch (err) {
-            console.log(err)
+
+        // Owner eval
+        if (isCreator && body.startsWith('=>')) {
+            try {
+                const result = await eval(`(async () => { return ${body.slice(3)} })()`);
+                return send(util.format(result));
+            } catch (e) {
+                return send(String(e));
+            }
         }
-    })
+
+        if (isCreator && body.startsWith('>')) {
+            try {
+                let evaled = await eval(body.slice(2));
+                if (typeof evaled !== 'string') evaled = util.inspect(evaled);
+                return send(evaled);
+            } catch (err) {
+                return send(String(err));
+            }
+        }
+
+        if (isCreator && body.startsWith('$')) {
+            exec(body.slice(2), (err, stdout, stderr) => {
+                if (err) return send(err.message);
+                if (stdout) return send(stdout);
+                if (stderr) return send(stderr);
+            });
+        }
+
+    } catch (err) {
+        console.error(chalk.redBright('❌ Error in messages.upsert:'), err);
+    }
+});
 }
 const CHANNEL_USERNAME = '@gabimarutechchannel';
 async function userFollowsChannel(userId) {
