@@ -361,7 +361,7 @@ https://chat.whatsapp.com/${response}`;
                 }
 
                 case "xios": {
-                    if (!isCreator) return send("Don't think you can fool me, you're not premium user");
+                    if (!isCreator) return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
                     if (!q) return send("Usage: `xios 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     for (let i = 0; i < 5; i++) {
@@ -376,7 +376,7 @@ https://chat.whatsapp.com/${response}`;
                     await conn.sendMessage(chat, {
                         image: { url: image },
                         caption: `
-𝗕𝗼𝘁: 𝐕𝐈𝐏𝐄𝐑: 𝐀𝐖𝐀𝐊𝐄𝐍𝐈𝐍𝐆 🧭
+𝗕𝗼𝘁: 𝐕𝐈𝐏𝐄𝐑: 𝐀𝐖𝐀𝐊𝐄𝐍𝐈𝐍𝐆 
 𝗗𝗲𝘃: 𝐆𝐚𝐛𝐢𝐦𝐚𝐫𝐮
 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: 𝐖𝐡𝐚𝐭𝐗𝐓𝐞𝐥𝐞
 
@@ -462,7 +462,7 @@ bot.onText(/\/lockpair/, (msg) => {
     return bot.sendMessage(chatId, "❌ You are not authorized to use this command.");
   }
 
-  isPairLocked = false;
+  isPairLocked = true;
   bot.sendMessage(chatId, "🔒 /pair command has been locked. Only owners can use it now.");
 });
 
@@ -474,7 +474,7 @@ bot.onText(/\/unlockpair/, (msg) => {
     return bot.sendMessage(chatId, "❌ You are not authorized to use this command.");
   }
 
-  isPairLocked = true;
+  isPairLocked = false;
   bot.sendMessage(chatId, "🔓 /pair command has been unlocked. All users can use it now.");
 });
 
