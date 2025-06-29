@@ -7,7 +7,7 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(mod => mod.default(...args));
 
 const apiURL = 'https://trial-endpoint.onrender.com/trial';
 
