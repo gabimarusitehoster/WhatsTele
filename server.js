@@ -7,9 +7,9 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
-const fetch = require('node-fetch'); // Run `npm i node-fetch` if needed
+const fetch = require('node-fetch');
 
-const apiURL = 'https://yourdomain.com/trial';
+const apiURL = 'https://trial-endpoint.onrender.com/trial';
 
 async function isTrialActive() {
   try {
