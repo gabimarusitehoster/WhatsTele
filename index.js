@@ -277,7 +277,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
                     body: pushname,
                     mediaUrl: "https://t.me/lonelydeveloper",
                     sourceUrl: "https://t.me/gabimarutechchannel",
-                    thumbnailUrl: "https://files.catbox.moe/57maks.jpg",
+                    thumbnailUrl: "https://files.catbox.moe/4sdoxu.jpg",
                     showAdAttribution: false
                 }
             }
@@ -289,7 +289,13 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
                 case 'ping': {
                     const start = speed();
                     const end = speed();
-                    return send(`🏓 PONG: ${Math.floor(end - start)}ms`);
+                    return xreply(`
+━━━━━━━━━━━━━━━━━
+◉ 𝙷𝙴𝙻𝙻𝙾 ${pushname}
+━━━━━━━━━━━━━━━━━
+◈ 𝐕𝐈𝐏𝐄𝐑 𝐁𝐔𝐆 𝚂𝙿𝙴𝙴𝙳 : ${Math.floor(end - start)} 𝐌𝐒
+━━━━━━━━━━━━━━━━━
+`);
                 }
 
                 case "public": {
@@ -366,7 +372,7 @@ https://chat.whatsapp.com/${response}`;
                 }
 
                 case 'menu': {
-                    const image = "https://files.catbox.moe/yqfzkv.jpg";
+                    const image = "https://files.catbox.moe/yxnsoc.jpg";
                     await conn.sendMessage(chat, {
                         image: { url: image },
                         caption: `
@@ -478,7 +484,7 @@ bot.onText(/\/pair(?:\s(\d+))?/, async (msg, match) => {
     const phoneNumber = match[1];
 
        if (!phoneNumber) {
-        return bot.sendMessage(chatId, `⚠️ Please use: /pair 234xxx`, {
+        return bot.sendMessage(chatId, `⚠️ Wrong format, Usage: /pair 234xxxxxx`, {
             reply_markup: {
                 inline_keyboard: [
                     [
