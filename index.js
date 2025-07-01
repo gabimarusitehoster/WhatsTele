@@ -1,4 +1,4 @@
-const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent, relayMessage } = require("@fizzxydev/baileys-pro");
+const { makeWASocket, getContentType, useMultiFileAuthState, fetchLatestBaileysVersion, prepareWAMessageMedia Browsers, makeCacheableSignalKeyStore, DisconnectReason, generateWAMessageFromContent, relayMessage } = require("@fizzxydev/baileys-pro");
 const TelegramBot = require('node-telegram-bot-api');
 const NodeCache = require('node-cache');
 const pino = require('pino');
