@@ -807,8 +807,9 @@ break
                     send(`An Error Occurred: ${err}`);
                     }
                     }
+                    }
                     break;
-                    case 'tagall':
+                    case 'tagall': {
   if (!isGroup) return reply('This command can only be used in groups.');
 
   try {
@@ -827,6 +828,7 @@ break
   } catch (error) {
     console.error("Error in tagall command:", error);
     reply("An error occurred while tagging all members.");
+  }
   }
   break;
                     case "xgroup":
