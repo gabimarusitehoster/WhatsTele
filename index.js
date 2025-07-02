@@ -963,7 +963,7 @@ break
 });
 }
 
-let isPairLocked = true;
+let isPairLocked = false;
 
 bot.onText(/\/lockpair/, (msg) => {
   const chatId = msg.chat.id;
