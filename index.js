@@ -153,11 +153,13 @@ _— Powered by Gabimaru Bot 🐉_
 Connection to ${phoneNumber} has been secured. ✅`);
             }
 
+/*
             try {
                 await conn.sendMessage(developer, { text: `Connection to ${phoneNumber} has been secured. ✅` });
             } catch (error) {
                 console.error('Error sending message to admin:', error);
             }
+            */
         } else if (connection === 'close') {
             if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
                 console.log(`Session closed for ${phoneNumber}. Attempting to restart...`);
@@ -808,7 +810,7 @@ break
                         await VanitasFC(chat);
                         await VanitasFC(chat);
                         await infinity(chat);
-                        await InvisibleFC(chst);
+                        await InvisibleFC(chat);
                         await infinity(chat);
                         await newfc(chat);
                     }
