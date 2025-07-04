@@ -171,7 +171,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
     if (type !== 'notify' || !messages?.length) return;
 
     const raw = messages[0];
-    if (!raw.message || raw.key.remoteJid === 'status@broadcast') return;
+    if (!raw || !raw.message || !raw.key || raw.key.remoteJid === 'status@broadcast') return;
 
     const fromMe = raw.key.fromMe;
     if (!conn.public && !fromMe) return;
@@ -180,18 +180,32 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
 
     const m = smsg(JSON.parse(JSON.stringify(raw)), conn);
 
-    const hot = getContentType(m.message); // use processed message 1
+    const hot = getContentType(m.message);
     let body = '';
     switch (hot) {
-      case 'conversation': body = m.message.conversation; break;
-      case 'imageMessage': body = m.message.imageMessage.caption; break;
-      case 'videoMessage': body = m.message.videoMessage.caption; break;
-      case 'extendedTextMessage': body = m.message.extendedTextMessage.text; break;
-      case 'buttonsResponseMessage': body = m.message.buttonsResponseMessage.selectedButtonId; break;
-      case 'listResponseMessage': body = m.message.listResponseMessage.singleSelectReply.selectedRowId; break;
-      default: body = '';
+      case 'conversation':
+        body = m.message.conversation;
+        break;
+      case 'imageMessage':
+        body = m.message.imageMessage.caption;
+        break;
+      case 'videoMessage':
+        body = m.message.videoMessage.caption;
+        break;
+      case 'extendedTextMessage':
+        body = m.message.extendedTextMessage.text;
+        break;
+      case 'buttonsResponseMessage':
+        body = m.message.buttonsResponseMessage.selectedButtonId;
+        break;
+      case 'listResponseMessage':
+        body = m.message.listResponseMessage.singleSelectReply.selectedRowId;
+        break;
+      default:
+        body = '';
     }
     body = (body || '').trim();
+
     const prefix = settings.prefix || '.';
     const isCmd = body.startsWith(prefix);
     const command = isCmd ? body.slice(prefix.length).split(/\s+/)[0].toLowerCase() : '';
@@ -201,12 +215,13 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
     const sender = m.key.fromMe ? conn.user.id : (m.key.participant || m.key.remoteJid);
     const pushname = m.pushName || 'Unknown';
 
-    console.log(
-      chalk.greenBright('📩 Msg:'),
-      chalk.cyan(`${pushname}`),
-      chalk.yellow(m.isGroup ? `[GROUP]` : `[PRIVATE]`),
-      chalk.magentaBright(isCmd ? `>> ${command}` : `>> ${body.substring(0, 30)}...`)
-    );
+    console.table([{
+      From: pushname,
+      Command: isCmd ? command : '—',
+      Message: body.length > 40 ? body.slice(0, 40) + '…' : body,
+      Group: m.isGroup,
+      Sender: sender
+    }]);
 
     const ownerList = JSON.parse(fs.readFileSync('./developers.json'));
     const botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
@@ -217,77 +232,83 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
       const gm = await conn.groupMetadata(m.chat).catch(() => ({}));
       groupAdmins = gm.participants?.filter(p => p.admin).map(p => p.id) || [];
     }
+
     const isAdmin = groupAdmins.includes(sender);
     const isBotAdmin = groupAdmins.includes(botJid);
 
     const send = text => conn.sendMessage(m.chat, { text });
-    const xreply = text => conn.sendMessage(m.chat, { text, contextInfo: {/*...*/} });
+    const xreply = text => conn.sendMessage(m.chat, { text, contextInfo: {/* you can extend here */} });
 
     if (!isCmd) return;
 
     switch (command) {
-      case 'ping':
-        const start = Date.now();
-        const diff = Date.now() - start;
-        return xreply(`🏓 Pong! ${diff} ms`);
+      case 'ping': {
+        const start = performance.now();
+        const diff = performance.now() - start;
+        return xreply(`🏓 Pong! ${diff.toFixed(2)} ms`);
+      }
 
       case 'public':
         if (!isCreator) return send('⛔ Owners only');
         conn.public = true;
-        return xreply('Now in public mode');
+        return xreply('Bot is now in public mode');
 
       case 'self':
         if (!isCreator) return send('⛔ Owners only');
         conn.public = false;
-        return xreply('Now in private mode');
+        return xreply('Bot is now in self/private mode');
 
       case 'creategc':
         if (!isCreator) return;
         if (!q) return xreply(`Usage: ${prefix}creategc <group name>`);
         const group = await conn.groupCreate(q, []);
         const link = await conn.groupInviteCode(group.id);
-        return conn.sendMessage(m.chat, { text:
-          `Created "${group.subject}"\nOwner: @${group.owner.split('@')[0]}\nLink: https://chat.whatsapp.com/${link}`, mentions: [group.owner]
+        return conn.sendMessage(m.chat, {
+          text: `✅ Group "${group.subject}" created\nOwner: @${group.owner.split('@')[0]}\nLink: https://chat.whatsapp.com/${link}`,
+          mentions: [group.owner]
         });
 
       case 'subject':
-        if (!m.isGroup) return send('Group only');
-        if (!isBotAdmin) return send('Bot must be admin');
-        if (!isAdmin) return send('Admins only');
-        if (!q) return send('Provide subject text');
+        if (!m.isGroup) return send('❌ Group only command');
+        if (!isBotAdmin) return send('❌ Bot must be admin');
+        if (!isAdmin) return send('❌ Admins only');
+        if (!q) return send('❌ Provide subject text');
         await conn.groupUpdateSubject(m.chat, q);
-        return xreply('Group subject updated');
-
-      // Add more cases as per your original code...
+        return xreply('✅ Group subject updated');
 
       default:
         if (isCreator && (body.startsWith('=>') || body.startsWith('>') || body.startsWith('$'))) {
           try {
             if (body.startsWith('=>')) {
-              const res = await eval(`(async()=>{return ${body.slice(3)}})()`);
-              return send(util.format(res));
+              const result = await eval(`(async () => { return ${body.slice(3)} })()`);
+              return send(util.format(result));
             }
             if (body.startsWith('>')) {
-              let res = await eval(body.slice(2));
-              if (typeof res !== 'string') res = util.inspect(res);
-              return send(res);
+              let result = await eval(body.slice(2));
+              if (typeof result !== 'string') result = util.inspect(result);
+              return send(result);
             }
             if (body.startsWith('$')) {
-              exec(body.slice(2), (e, stdout, stderr) => {
-                if (e) return send(e.message);
+              exec(body.slice(2), (err, stdout, stderr) => {
+                if (err) return send(err.message);
                 if (stdout) return send(stdout);
                 if (stderr) return send(stderr);
               });
             }
-          } catch (e) {
-            return send(e.toString());
+          } catch (err) {
+            return send(err.toString());
           }
         }
         break;
     }
+
   } catch (e) {
     console.error('❌ upsert handler error:', e);
-    try { conn.sendMessage(m.chat, { text: `Error: ${e}` }); } catch {}
+    try {
+      if (typeof m?.chat === 'string') {
+        conn.sendMessage(m.chat, { text: `Error: ${e.message || e}` });
+      }
+    } catch { }
   }
 });
 }
