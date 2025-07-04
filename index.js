@@ -179,6 +179,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
     raw.message = raw.message.ephemeralMessage?.message || raw.message;
 
     const m = smsg(JSON.parse(JSON.stringify(raw)), conn);
+    if (!m || !m.key) return;
 
     const hot = getContentType(m.message);
     let body = '';
@@ -237,7 +238,7 @@ conn.ev.on('messages.upsert', async ({ messages, type }) => {
     const isBotAdmin = groupAdmins.includes(botJid);
 
     const send = text => conn.sendMessage(m.chat, { text });
-    const xreply = text => conn.sendMessage(m.chat, { text, contextInfo: {/* you can extend here */} });
+    const xreply = text => conn.sendMessage(m.chat, { text, contextInfo: {} });
 
     if (!isCmd) return;
 
